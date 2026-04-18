@@ -1,32 +1,38 @@
-// Full-screen mobile container — no scroll, safe area insets
+// src/components/GameShell.tsx
 import { ReactNode } from 'react';
 
 export function GameShell({ children }: { children: ReactNode }) {
   return (
     <div
-      className="
-        fixed inset-0 flex flex-col
-        bg-space-950 text-white
-        overflow-hidden select-none
-        [env(safe-area-inset-top)]:pt-[env(safe-area-inset-top)]
-        [env(safe-area-inset-bottom)]:pb-[env(safe-area-inset-bottom)]
-      "
+      className="space-grid"
       style={{
+        position: 'fixed',
+        inset: 0,
         height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        background: '#020408',
+        color: 'white',
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
-      {/* Subtle space background grid */}
+      {/* Radial glow at top */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-5"
         style={{
-          backgroundImage: `
-            linear-gradient(rgba(0,255,136,0.3) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0,255,136,0.3) 1px, transparent 1px)
-          `,
-          backgroundSize: '32px 32px',
+          position: 'absolute',
+          top: '-20%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '60%',
+          height: '40%',
+          background: 'radial-gradient(ellipse, rgba(0,255,136,0.06) 0%, transparent 70%)',
+          pointerEvents: 'none',
         }}
       />
-      <div className="relative flex flex-col flex-1 overflow-hidden">
+      {/* Content */}
+      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
         {children}
       </div>
     </div>

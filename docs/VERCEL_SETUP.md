@@ -9,12 +9,7 @@ This guide explains how to deploy the Congruence miniapp to Vercel.
 ## 2. Deployment Steps
 
 1.  **Push to GitHub**:
-    Create a new repository on GitHub and push your code:
-    ```bash
-    git remote add origin https://github.com/YOUR_USERNAME/congruence-alien.git
-    git branch -M main
-    git push -u origin main
-    ```
+    Create a new repository on GitHub and push your code.
 
 2.  **Import to Vercel**:
     - Go to the [Vercel Dashboard](https://vercel.com/dashboard).

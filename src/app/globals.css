@@ -1,49 +1,94 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --alien-green: #00ff88;
-  --space-950: #020408;
+  --g: #00ff88; /* alien green */
+  --c: #06b6d4; /* alien cyan */
+  --p: #8b5cf6; /* alien purple */
+  --gd: #f59e0b; /* gold */
+  --s950: #020408;
+  --s900: #050d18;
+  --s800: #0a1628;
+  --s700: #0f2040;
+  --s600: #163058;
 }
 
 * {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  box-sizing: border-box;
 }
 
 html, body {
   overscroll-behavior: none;
-  -webkit-overflow-scrolling: touch;
+  background: var(--s950);
+  height: 100%;
+  overflow: hidden;
 }
 
-/* Alien scanline overlay effect */
-.scanline::before {
+/* Orbitron for all headings and numbers */
+h1, h2, h3, .font-orbitron {
+  font-family: var(--font-orbitron), monospace;
+}
+
+/* Space grid background — applied to GameShell */
+.space-grid {
+  background-image:
+    linear-gradient(rgba(0,255,136,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,136,0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Neon glow text */
+.glow-green {
+  text-shadow: 0 0 10px #00ff88, 0 0 30px #00ff8860, 0 0 60px #00ff8830;
+}
+.glow-cyan {
+  text-shadow: 0 0 10px #06b6d4, 0 0 30px #06b6d460;
+}
+.glow-gold {
+  text-shadow: 0 0 10px #f59e0b, 0 0 30px #f59e0b60;
+}
+
+/* Scanline overlay */
+body::after {
   content: '';
   position: fixed;
-  top: -100%;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(transparent, rgba(0, 255, 136, 0.05), transparent);
-  animation: scanline 8s linear infinite;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.15) 2px,
+    rgba(0,0,0,0.15) 4px
+  );
   pointer-events: none;
   z-index: 9999;
 }
 
-@keyframes scanline {
-  0% { top: -10%; }
-  100% { top: 110%; }
+/* Pulsing border for selected cell */
+@keyframes cell-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px #3b82f6, 0 0 12px #3b82f640; }
+  50% { box-shadow: 0 0 0 2px #3b82f6, 0 0 20px #3b82f680; }
 }
 
-/* Prevent double-tap zoom on buttons */
-button {
-  touch-action: manipulation;
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
 }
 
-/* Safe area support */
-.safe-bottom {
-  padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
 }
+
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+
+.animate-float { animation: float 4s ease-in-out infinite; }
+.animate-fade-in-up { animation: fadeInUp 0.4s ease forwards; }
+.animate-cell-pulse { animation: cell-pulse 1.5s ease-in-out infinite; }
