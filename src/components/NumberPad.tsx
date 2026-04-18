@@ -5,7 +5,7 @@ import { useGameStore } from '@/store/gameStore';
 import { buzz } from '@/lib/alienClient';
 
 export function NumberPad() {
-  const { puzzle, enterNumber, clearCell, useHint, undo } = useGameStore();
+  const { puzzle, enterNumber, clearCell, useHint, undo, freeHintsRemaining, alienTokenBalance } = useGameStore();
 
   if (!puzzle) return null;
 
@@ -51,6 +51,8 @@ export function NumberPad() {
     }, 120);
   }
 
+  const isHintAffordable = freeHintsRemaining > 0 || alienTokenBalance >= 10;
+
   return (
     <div style={{
       background: 'rgba(2,4,8,0.97)',
@@ -78,7 +80,7 @@ export function NumberPad() {
       </div>
 
       {/* Action row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr', gap: 8 }}>
         <button
           onTouchStart={e => { e.currentTarget.style.transform = 'scale(0.9)'; }}
           // @ts-ignore
@@ -98,19 +100,24 @@ export function NumberPad() {
           ↺ Undo
         </button>
         <button
-          onTouchStart={e => { e.currentTarget.style.transform = 'scale(0.9)'; }}
+          onTouchStart={e => { if (isHintAffordable) e.currentTarget.style.transform = 'scale(0.9)'; }}
           // @ts-ignore
           onTouchEnd={e => { e.currentTarget.style.transform = 'scale(1)'; }}
           onClick={() => { useHint(); buzz('medium'); }}
+          disabled={!isHintAffordable}
           style={{
             ...ACT_BTN,
-            color: '#f59e0b',
-            border: '1.5px solid rgba(245,158,11,0.35)',
-            background: 'rgba(245,158,11,0.07)',
-            boxShadow: '0 0 12px rgba(245,158,11,0.1)',
+            color: isHintAffordable ? '#f59e0b' : 'rgba(255,255,255,0.2)',
+            border: `1.5px solid ${isHintAffordable ? 'rgba(245,158,11,0.35)' : 'rgba(255,255,255,0.05)'}`,
+            background: isHintAffordable ? 'rgba(245,158,11,0.07)' : 'rgba(255,255,255,0.02)',
+            boxShadow: isHintAffordable ? '0 0 12px rgba(245,158,11,0.1)' : 'none',
+            fontSize: 11,
+            opacity: isHintAffordable ? 1 : 0.5,
           }}
         >
-          💡 Hint
+          {freeHintsRemaining > 0
+            ? `💡 Hint (${freeHintsRemaining})`
+            : `💡 Hint (10 🪙)`}
         </button>
       </div>
     </div>
