@@ -1,24 +1,15 @@
 # Environment Variables Documentation
 
-The following environment variables are required for Congruence to function properly.
+The following environment variables are required for the Congruence miniapp.
+
+## Database
+- `DATABASE_URL`: PostgreSQL connection string (Neon or Supabase).
 
 ## Alien Platform
-- `ALIEN_APP_ID`: Unique ID for your app from dev.alien.org.
-- `ALIEN_APP_SECRET`: Secret key for server-to-server communication.
-- `ALIEN_WEBHOOK_SECRET`: Used to verify signatures of incoming webhooks.
-
-## Solana & Aliencoin
-- `NEXT_PUBLIC_ALIENCOIN_MINT`: The SPL token mint address for Aliencoin on Solana Mainnet.
-- `NEXT_PUBLIC_TREASURY_WALLET`: The Solana public key that will receive payments.
-- `SOLANA_RPC_URL`: A Solana RPC endpoint (default: `https://api.mainnet-beta.solana.com`).
-
-## Game Settings
-- `NEXT_PUBLIC_TRIAL_COST_TOKENS`: Cost in Aliencoin for 5 additional trials (default: `5`).
-- `NEXT_PUBLIC_FREE_TRIALS`: Number of free daily trials (default: `3`).
-
-## Database (Upstash Redis)
-- `UPSTASH_REDIS_REST_URL`: REST URL from your Upstash console.
-- `UPSTASH_REDIS_REST_TOKEN`: REST token from your Upstash console.
+- `WEBHOOK_PUBLIC_KEY`: Ed25519 public key for verifying payment webhooks (from dev.alien.org).
+- `NEXT_PUBLIC_RECIPIENT_ADDRESS`: Solana wallet address to receive USDC.
+- `NEXT_PUBLIC_ALIEN_RECIPIENT_ADDRESS`: Alien Provider address to receive ALIEN tokens.
 
 ## General
-- `NEXT_PUBLIC_APP_URL`: The public base URL of your application.
+- `NEXT_PUBLIC_APP_URL`: Your base deployment URL.
+- `RUN_MIGRATIONS`: Set to `true` to run Drizzle migrations on deploy.

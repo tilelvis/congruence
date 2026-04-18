@@ -9,7 +9,7 @@ import { GameBoard } from '@/components/GameBoard';
 import { VictoryScreen } from '@/components/VictoryScreen';
 import { Leaderboard } from '@/components/Leaderboard';
 import { Tutorial } from '@/components/Tutorial';
-import { PaymentGate } from '@/components/PaymentGate';
+import { WalletPage } from '@/components/WalletPage';
 
 export default function Home() {
   const { screen, tick, goTo, startGame } = useGameStore();
@@ -23,13 +23,13 @@ export default function Home() {
   // Handle incoming deeplink parameters
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const screen = params.get('screen');
+    const screenParam = params.get('screen');
     const diff = params.get('diff');
-    // @ts-ignore
-    const score = params.get('score');
 
-    if (screen === 'leaderboard') {
+    if (screenParam === 'leaderboard') {
       goTo('leaderboard');
+    } else if (screenParam === 'wallet') {
+      goTo('wallet');
     } else if (diff) {
       const sizeMap: Record<string, number> = {
         novice: 5, easy: 6, medium: 6, hard: 8, expert: 9, master: 9
@@ -46,14 +46,11 @@ export default function Home() {
     switch (screen) {
       case 'splash':      return <SplashScreen />;
       case 'difficulty':  return <DifficultySelect />;
-      case 'game':        return (
-        <PaymentGate onTrialGranted={() => {}}>
-          <GameBoard />
-        </PaymentGate>
-      );
+      case 'game':        return <GameBoard />;
       case 'victory':     return <VictoryScreen />;
       case 'leaderboard': return <Leaderboard />;
       case 'tutorial':    return <Tutorial onClose={() => goTo('splash')} />;
+      case 'wallet':      return <WalletPage onBack={() => goTo('splash')} />;
       default:            return <SplashScreen />;
     }
   };

@@ -1,31 +1,25 @@
 'use client';
 
-import { useAlien, hapticFeedback, openDeepLink } from '@alien-id/miniapp-sdk';
+import { useAlien } from '@alien_org/react';
 
-/**
- * Detect if running inside the Alien app frame.
- * Falls back gracefully in browser dev mode.
- */
 export function isAlienApp(): boolean {
   if (typeof window === 'undefined') return false;
   return (
     window.navigator.userAgent.includes('AlienApp') ||
-    (window as typeof window & { __ALIEN_CONTEXT__?: unknown }).__ALIEN_CONTEXT__ !== undefined ||
+    (window as any).__ALIEN_CONTEXT__ !== undefined ||
     new URLSearchParams(window.location.search).has('alien_context')
   );
 }
 
 type HapticType = 'light' | 'medium' | 'heavy' | 'success' | 'error';
 
-/**
- * Wrapper: vibrate on mobile if supported, then trigger Alien haptics
- */
 export function buzz(type: HapticType = 'light') {
-  try {
-    hapticFeedback(type);
-  } catch (_) {
-    // Not in Alien app — silently skip
+  // @ts-ignore
+  if (typeof window !== 'undefined' && window.AlienBridge && window.AlienBridge.hapticFeedback) {
+    // @ts-ignore
+    window.AlienBridge.hapticFeedback(type);
   }
+
   if (typeof navigator !== 'undefined' && navigator.vibrate) {
     const patterns: Record<HapticType, number | number[]> = {
       light: 10,
@@ -38,22 +32,14 @@ export function buzz(type: HapticType = 'light') {
   }
 }
 
-/**
- * Share a score result as a deep link back into Alien
- */
 export function shareScore(score: number, difficulty: string, size: number) {
   const path = `/congruence?score=${score}&diff=${difficulty}&size=${size}`;
-  try {
-    openDeepLink(path);
-  } catch (_) {
-    // Fallback for browser
-    if (typeof navigator !== 'undefined' && navigator.share) {
-      navigator.share({
-        title: '🛸 CONGRUENCE',
-        text: `I scored ${score} on ${difficulty} (${size}×${size})! Beat me on Alien.`,
-        url: `${process.env.NEXT_PUBLIC_APP_URL}${path}`,
-      });
-    }
+  if (typeof navigator !== 'undefined' && navigator.share) {
+    navigator.share({
+      title: '🛸 CONGRUENCE',
+      text: `I scored ${score} on ${difficulty} (${size}×${size})! Beat me on Alien.`,
+      url: `${process.env.NEXT_PUBLIC_APP_URL}${path}`,
+    });
   }
 }
 
