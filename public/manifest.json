@@ -1,0 +1,40 @@
+{
+  "version": "1",
+  "name": "Congruence",
+  "subtitle": "Modular Arithmetic Puzzle",
+  "description": "Decode alien transmissions by solving n×n modular arithmetic number grids. A unique logic puzzle found nowhere else in the galaxy.",
+  "iconUrl": "https://congruence.vercel.app/icon.png",
+  "heroImageUrl": "https://congruence.vercel.app/hero.png",
+  "splashImageUrl": "https://congruence.vercel.app/hero.png",
+  "splashBackgroundColor": "#050d18",
+  "homeUrl": "https://congruence.vercel.app",
+  "webhookUrl": "https://congruence.vercel.app/api/webhook",
+  "primaryCategory": "games",
+  "tags": ["puzzle", "math", "logic", "aliens", "modular"],
+  "screenshotUrls": [
+    "https://congruence.vercel.app/screenshot-1.png"
+  ],
+  "deepLinks": [
+    {
+      "path": "/congruence",
+      "description": "Open Congruence game"
+    },
+    {
+      "path": "/congruence?diff=novice",
+      "description": "Start a Novice mission"
+    },
+    {
+      "path": "/congruence?diff=expert",
+      "description": "Start an Expert mission"
+    },
+    {
+      "path": "/congruence?screen=leaderboard",
+      "description": "Open the Galactic Leaderboard"
+    }
+  ],
+  "permissions": [
+    "wallet_address",
+    "alien_id",
+    "payment_request"
+  ]
+}
