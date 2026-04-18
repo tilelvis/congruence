@@ -1,36 +1,76 @@
+// src/components/NumberPad.tsx
 'use client';
 
 import { useGameStore } from '@/store/gameStore';
-import { cn } from '@/lib/utils';
 import { buzz } from '@/lib/alienClient';
 
 export function NumberPad() {
   const { puzzle, enterNumber, clearCell, useHint, undo } = useGameStore();
+
   if (!puzzle) return null;
 
   const nums = Array.from({ length: puzzle.size }, (_, i) => i + 1);
-  const cols = puzzle.size <= 6 ? puzzle.size : Math.ceil(puzzle.size / 2);
+  const cols = puzzle.size <= 5 ? puzzle.size : puzzle.size <= 6 ? 6 : Math.ceil(puzzle.size / 2);
 
-  function tap(fn: () => void, type: 'light' | 'medium' = 'light') {
-    return () => { fn(); buzz(type); };
+  const NUM_BTN: React.CSSProperties = {
+    height: 50,
+    borderRadius: 10,
+    fontFamily: 'var(--font-orbitron), monospace',
+    fontWeight: 700,
+    fontSize: 20,
+    background: 'rgba(15,32,64,0.95)',
+    color: '#e2e8f0',
+    border: '1.5px solid rgba(6,182,212,0.25)',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.08s',
+    WebkitTapHighlightColor: 'transparent',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
+  };
+
+  const ACT_BTN: React.CSSProperties = {
+    ...NUM_BTN,
+    height: 44,
+    fontSize: 13,
+    fontWeight: 600,
+    color: 'rgba(255,255,255,0.5)',
+    border: '1.5px solid rgba(255,255,255,0.1)',
+  };
+
+  function tapEffect(e: React.TouchEvent<HTMLButtonElement>) {
+    const btn = e.currentTarget;
+    btn.style.transform = 'scale(0.88)';
+    btn.style.background = 'rgba(6,182,212,0.2)';
+    btn.style.borderColor = '#06b6d4';
+    setTimeout(() => {
+      btn.style.transform = 'scale(1)';
+      btn.style.background = NUM_BTN.background as string;
+      btn.style.borderColor = 'rgba(6,182,212,0.25)';
+    }, 120);
   }
 
   return (
-    <div className="bg-space-900 border-t border-space-700 px-3 pt-3 pb-4">
-      {/* Number buttons */}
-      <div
-        className="grid gap-2 mb-3"
-        style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
-      >
+    <div style={{
+      background: 'rgba(2,4,8,0.97)',
+      borderTop: '1px solid rgba(0,255,136,0.12)',
+      padding: '12px 14px 16px',
+      flexShrink: 0,
+    }}>
+      {/* Number grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${cols}, 1fr)`,
+        gap: 8,
+        marginBottom: 10,
+      }}>
         {nums.map(n => (
           <button
             key={n}
-            onClick={tap(() => enterNumber(n))}
-            className="
-              h-12 rounded-xl font-bold text-lg
-              bg-space-700 text-white border border-space-600
-              active:scale-90 active:bg-alien-blue transition-all
-            "
+            onTouchStart={tapEffect}
+            onClick={() => { enterNumber(n); buzz('light'); }}
+            style={NUM_BTN}
           >
             {n}
           </button>
@@ -38,22 +78,37 @@ export function NumberPad() {
       </div>
 
       {/* Action row */}
-      <div className="grid grid-cols-3 gap-2">
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
         <button
-          onClick={tap(clearCell)}
-          className="h-11 rounded-xl text-sm font-semibold text-slate-400 bg-space-800 border border-space-700 active:scale-90 transition-all"
+          onTouchStart={e => { e.currentTarget.style.transform = 'scale(0.9)'; }}
+          // @ts-ignore
+          onTouchEnd={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+          onClick={() => { clearCell(); buzz('light'); }}
+          style={ACT_BTN}
         >
           ✕ Clear
         </button>
         <button
-          onClick={tap(undo)}
-          className="h-11 rounded-xl text-sm font-semibold text-slate-400 bg-space-800 border border-space-700 active:scale-90 transition-all"
+          onTouchStart={e => { e.currentTarget.style.transform = 'scale(0.9)'; }}
+          // @ts-ignore
+          onTouchEnd={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+          onClick={() => { undo(); buzz('light'); }}
+          style={ACT_BTN}
         >
           ↺ Undo
         </button>
         <button
-          onClick={tap(() => useHint(), 'medium')}
-          className="h-11 rounded-xl text-sm font-bold text-alien-gold bg-space-800 border border-alien-gold/30 active:scale-90 transition-all"
+          onTouchStart={e => { e.currentTarget.style.transform = 'scale(0.9)'; }}
+          // @ts-ignore
+          onTouchEnd={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+          onClick={() => { useHint(); buzz('medium'); }}
+          style={{
+            ...ACT_BTN,
+            color: '#f59e0b',
+            border: '1.5px solid rgba(245,158,11,0.35)',
+            background: 'rgba(245,158,11,0.07)',
+            boxShadow: '0 0 12px rgba(245,158,11,0.1)',
+          }}
         >
           💡 Hint
         </button>

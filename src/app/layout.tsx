@@ -1,9 +1,19 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Orbitron, Exo_2 } from 'next/font/google';
 import './globals.css';
 import { AlienProvider } from '@/components/AlienProvider';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const orbitron = Orbitron({
+  subsets: ['latin'],
+  variable: '--font-orbitron',
+  weight: ['400', '700', '900'],
+});
+
+const exo2 = Exo_2({
+  subsets: ['latin'],
+  variable: '--font-exo2',
+  weight: ['300', '400', '600', '700'],
+});
 
 export const metadata: Metadata = {
   title: 'CONGRUENCE — Alien Miniapp',
@@ -17,7 +27,6 @@ export const metadata: Metadata = {
   },
 };
 
-// Critical: prevent user scaling and overscroll — this is a game
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -29,8 +38,8 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="h-full overflow-hidden">
-      <body className={`${inter.variable} h-full overflow-hidden bg-space-950 text-white`}>
+    <html lang="en" className={`${orbitron.variable} ${exo2.variable} h-full overflow-hidden`}>
+      <body className="h-full overflow-hidden bg-[#020408] text-white font-[family-name:var(--font-exo2)]">
         <AlienProvider>
           {children}
         </AlienProvider>
