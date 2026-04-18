@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { paymentIntents, transactions, gameWallets, walletLedger } from '@/lib/db/schema';
 import { eq, sql } from 'drizzle-orm';
-import { DEPOSIT_PACKS } from '../../invoices/route';
+import { DEPOSIT_PACKS } from '@/lib/constants/depositPacks';
 
 async function verifySignature(publicKeyHex: string, signatureHex: string, body: string): Promise<boolean> {
   try {

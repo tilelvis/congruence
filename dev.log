@@ -1,15 +1,352 @@
 
 > temp_scaffold@0.1.0 dev
-> next dev -p 3005
+> next dev
 
-⨯ Failed to start server
-Error: listen EADDRINUSE: address already in use :::3005
-    at <unknown> (Error: listen EADDRINUSE: address already in use :::3005)
-    at new Promise (<anonymous>) {
-  code: 'EADDRINUSE',
-  errno: -98,
-  syscall: 'listen',
-  address: '::',
-  port: 3005
+   ▲ Next.js 15.1.6
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.0.2:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1940ms
+ ○ Compiling / ...
+ ✓ Compiled / in 7.3s (771 modules)
+ GET / 200 in 8065ms
+ ○ Compiling /api/wallet/spend ...
+ ✓ Compiled /api/wallet/spend in 1388ms (882 modules)
+ ⨯ Error: Failed query: select "id", "alien_id", "balance", "total_deposited", "total_spent", "total_withdrawn", "updated_at" from "game_wallets" where "game_wallets"."alien_id" = $1 limit $2
+params: dummy-alien-id,1
+    at async POST (src/app/api/wallet/spend/route.ts:19:18)
+  17 |
+  18 |   // Get current balance
+> 19 |   const wallets = await db.select().from(gameWallets)
+     |                  ^
+  20 |     .where(eq(gameWallets.alienId, auth.alienId)).limit(1);
+  21 |
+  22 |   if (wallets.length === 0 || wallets[0].balance < TRIAL_COST) { {
+  query: 'select "id", "alien_id", "balance", "total_deposited", "total_spent", "total_withdrawn", "updated_at" from "game_wallets" where "game_wallets"."alien_id" = $1 limit $2',
+  params: [Array],
+  [cause]: Error [NeonDbError]: Error connecting to database: TypeError: fetch failed
+      at async POST (src/app/api/wallet/spend/route.ts:19:18)
+    17 |
+    18 |   // Get current balance
+  > 19 |   const wallets = await db.select().from(gameWallets)
+       |                  ^
+    20 |     .where(eq(gameWallets.alienId, auth.alienId)).limit(1);
+    21 |
+    22 |   if (wallets.length === 0 || wallets[0].balance < TRIAL_COST) { {
+    severity: undefined,
+    code: undefined,
+    detail: undefined,
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: undefined,
+    line: undefined,
+    routine: undefined,
+    sourceError: TypeError: fetch failed
+        at async POST (src/app/api/wallet/spend/route.ts:19:18)
+      17 |
+      18 |   // Get current balance
+    > 19 |   const wallets = await db.select().from(gameWallets)
+         |                  ^
+      20 |     .where(eq(gameWallets.alienId, auth.alienId)).limit(1);
+      21 |
+      22 |   if (wallets.length === 0 || wallets[0].balance < TRIAL_COST) { {
+      [cause]: [Error: getaddrinfo ENOTFOUND hostname] {
+        errno: -3008,
+        code: 'ENOTFOUND',
+        syscall: 'getaddrinfo',
+        hostname: 'hostname'
+      }
+    }
+  }
 }
-[?25h
+ ⨯ Error: Failed query: select "id", "alien_id", "balance", "total_deposited", "total_spent", "total_withdrawn", "updated_at" from "game_wallets" where "game_wallets"."alien_id" = $1 limit $2
+params: dummy-alien-id,1
+    at async POST (src/app/api/wallet/spend/route.ts:19:18)
+  17 |
+  18 |   // Get current balance
+> 19 |   const wallets = await db.select().from(gameWallets)
+     |                  ^
+  20 |     .where(eq(gameWallets.alienId, auth.alienId)).limit(1);
+  21 |
+  22 |   if (wallets.length === 0 || wallets[0].balance < TRIAL_COST) { {
+  query: 'select "id", "alien_id", "balance", "total_deposited", "total_spent", "total_withdrawn", "updated_at" from "game_wallets" where "game_wallets"."alien_id" = $1 limit $2',
+  params: [Array],
+  [cause]: Error [NeonDbError]: Error connecting to database: TypeError: fetch failed
+      at async POST (src/app/api/wallet/spend/route.ts:19:18)
+    17 |
+    18 |   // Get current balance
+  > 19 |   const wallets = await db.select().from(gameWallets)
+       |                  ^
+    20 |     .where(eq(gameWallets.alienId, auth.alienId)).limit(1);
+    21 |
+    22 |   if (wallets.length === 0 || wallets[0].balance < TRIAL_COST) { {
+    severity: undefined,
+    code: undefined,
+    detail: undefined,
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: undefined,
+    line: undefined,
+    routine: undefined,
+    sourceError: TypeError: fetch failed
+        at async POST (src/app/api/wallet/spend/route.ts:19:18)
+      17 |
+      18 |   // Get current balance
+    > 19 |   const wallets = await db.select().from(gameWallets)
+         |                  ^
+      20 |     .where(eq(gameWallets.alienId, auth.alienId)).limit(1);
+      21 |
+      22 |   if (wallets.length === 0 || wallets[0].balance < TRIAL_COST) { {
+      [cause]: [Error: getaddrinfo ENOTFOUND hostname] {
+        errno: -3008,
+        code: 'ENOTFOUND',
+        syscall: 'getaddrinfo',
+        hostname: 'hostname'
+      }
+    }
+  }
+}
+ POST /api/wallet/spend 500 in 2833ms
+ GET / 200 in 129ms
+ ⨯ Error: Failed query: select "id", "alien_id", "balance", "total_deposited", "total_spent", "total_withdrawn", "updated_at" from "game_wallets" where "game_wallets"."alien_id" = $1 limit $2
+params: dummy-alien-id,1
+    at async POST (src/app/api/wallet/spend/route.ts:19:18)
+  17 |
+  18 |   // Get current balance
+> 19 |   const wallets = await db.select().from(gameWallets)
+     |                  ^
+  20 |     .where(eq(gameWallets.alienId, auth.alienId)).limit(1);
+  21 |
+  22 |   if (wallets.length === 0 || wallets[0].balance < TRIAL_COST) { {
+  query: 'select "id", "alien_id", "balance", "total_deposited", "total_spent", "total_withdrawn", "updated_at" from "game_wallets" where "game_wallets"."alien_id" = $1 limit $2',
+  params: [Array],
+  [cause]: Error [NeonDbError]: Error connecting to database: TypeError: fetch failed
+      at async POST (src/app/api/wallet/spend/route.ts:19:18)
+    17 |
+    18 |   // Get current balance
+  > 19 |   const wallets = await db.select().from(gameWallets)
+       |                  ^
+    20 |     .where(eq(gameWallets.alienId, auth.alienId)).limit(1);
+    21 |
+    22 |   if (wallets.length === 0 || wallets[0].balance < TRIAL_COST) { {
+    severity: undefined,
+    code: undefined,
+    detail: undefined,
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: undefined,
+    line: undefined,
+    routine: undefined,
+    sourceError: TypeError: fetch failed
+        at async POST (src/app/api/wallet/spend/route.ts:19:18)
+      17 |
+      18 |   // Get current balance
+    > 19 |   const wallets = await db.select().from(gameWallets)
+         |                  ^
+      20 |     .where(eq(gameWallets.alienId, auth.alienId)).limit(1);
+      21 |
+      22 |   if (wallets.length === 0 || wallets[0].balance < TRIAL_COST) { {
+      [cause]: [Error: getaddrinfo ENOTFOUND hostname] {
+        errno: -3008,
+        code: 'ENOTFOUND',
+        syscall: 'getaddrinfo',
+        hostname: 'hostname'
+      }
+    }
+  }
+}
+ ⨯ Error: Failed query: select "id", "alien_id", "balance", "total_deposited", "total_spent", "total_withdrawn", "updated_at" from "game_wallets" where "game_wallets"."alien_id" = $1 limit $2
+params: dummy-alien-id,1
+    at async POST (src/app/api/wallet/spend/route.ts:19:18)
+  17 |
+  18 |   // Get current balance
+> 19 |   const wallets = await db.select().from(gameWallets)
+     |                  ^
+  20 |     .where(eq(gameWallets.alienId, auth.alienId)).limit(1);
+  21 |
+  22 |   if (wallets.length === 0 || wallets[0].balance < TRIAL_COST) { {
+  query: 'select "id", "alien_id", "balance", "total_deposited", "total_spent", "total_withdrawn", "updated_at" from "game_wallets" where "game_wallets"."alien_id" = $1 limit $2',
+  params: [Array],
+  [cause]: Error [NeonDbError]: Error connecting to database: TypeError: fetch failed
+      at async POST (src/app/api/wallet/spend/route.ts:19:18)
+    17 |
+    18 |   // Get current balance
+  > 19 |   const wallets = await db.select().from(gameWallets)
+       |                  ^
+    20 |     .where(eq(gameWallets.alienId, auth.alienId)).limit(1);
+    21 |
+    22 |   if (wallets.length === 0 || wallets[0].balance < TRIAL_COST) { {
+    severity: undefined,
+    code: undefined,
+    detail: undefined,
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: undefined,
+    line: undefined,
+    routine: undefined,
+    sourceError: TypeError: fetch failed
+        at async POST (src/app/api/wallet/spend/route.ts:19:18)
+      17 |
+      18 |   // Get current balance
+    > 19 |   const wallets = await db.select().from(gameWallets)
+         |                  ^
+      20 |     .where(eq(gameWallets.alienId, auth.alienId)).limit(1);
+      21 |
+      22 |   if (wallets.length === 0 || wallets[0].balance < TRIAL_COST) { {
+      [cause]: [Error: getaddrinfo ENOTFOUND hostname] {
+        errno: -3008,
+        code: 'ENOTFOUND',
+        syscall: 'getaddrinfo',
+        hostname: 'hostname'
+      }
+    }
+  }
+}
+ POST /api/wallet/spend 500 in 888ms
+ GET / 200 in 80ms
+ ⨯ Error: Failed query: select "id", "alien_id", "balance", "total_deposited", "total_spent", "total_withdrawn", "updated_at" from "game_wallets" where "game_wallets"."alien_id" = $1 limit $2
+params: dummy-alien-id,1
+    at async POST (src/app/api/wallet/spend/route.ts:19:18)
+  17 |
+  18 |   // Get current balance
+> 19 |   const wallets = await db.select().from(gameWallets)
+     |                  ^
+  20 |     .where(eq(gameWallets.alienId, auth.alienId)).limit(1);
+  21 |
+  22 |   if (wallets.length === 0 || wallets[0].balance < TRIAL_COST) { {
+  query: 'select "id", "alien_id", "balance", "total_deposited", "total_spent", "total_withdrawn", "updated_at" from "game_wallets" where "game_wallets"."alien_id" = $1 limit $2',
+  params: [Array],
+  [cause]: Error [NeonDbError]: Error connecting to database: TypeError: fetch failed
+      at async POST (src/app/api/wallet/spend/route.ts:19:18)
+    17 |
+    18 |   // Get current balance
+  > 19 |   const wallets = await db.select().from(gameWallets)
+       |                  ^
+    20 |     .where(eq(gameWallets.alienId, auth.alienId)).limit(1);
+    21 |
+    22 |   if (wallets.length === 0 || wallets[0].balance < TRIAL_COST) { {
+    severity: undefined,
+    code: undefined,
+    detail: undefined,
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: undefined,
+    line: undefined,
+    routine: undefined,
+    sourceError: TypeError: fetch failed
+        at async POST (src/app/api/wallet/spend/route.ts:19:18)
+      17 |
+      18 |   // Get current balance
+    > 19 |   const wallets = await db.select().from(gameWallets)
+         |                  ^
+      20 |     .where(eq(gameWallets.alienId, auth.alienId)).limit(1);
+      21 |
+      22 |   if (wallets.length === 0 || wallets[0].balance < TRIAL_COST) { {
+      [cause]: [Error: getaddrinfo ENOTFOUND hostname] {
+        errno: -3008,
+        code: 'ENOTFOUND',
+        syscall: 'getaddrinfo',
+        hostname: 'hostname'
+      }
+    }
+  }
+}
+ ⨯ Error: Failed query: select "id", "alien_id", "balance", "total_deposited", "total_spent", "total_withdrawn", "updated_at" from "game_wallets" where "game_wallets"."alien_id" = $1 limit $2
+params: dummy-alien-id,1
+    at async POST (src/app/api/wallet/spend/route.ts:19:18)
+  17 |
+  18 |   // Get current balance
+> 19 |   const wallets = await db.select().from(gameWallets)
+     |                  ^
+  20 |     .where(eq(gameWallets.alienId, auth.alienId)).limit(1);
+  21 |
+  22 |   if (wallets.length === 0 || wallets[0].balance < TRIAL_COST) { {
+  query: 'select "id", "alien_id", "balance", "total_deposited", "total_spent", "total_withdrawn", "updated_at" from "game_wallets" where "game_wallets"."alien_id" = $1 limit $2',
+  params: [Array],
+  [cause]: Error [NeonDbError]: Error connecting to database: TypeError: fetch failed
+      at async POST (src/app/api/wallet/spend/route.ts:19:18)
+    17 |
+    18 |   // Get current balance
+  > 19 |   const wallets = await db.select().from(gameWallets)
+       |                  ^
+    20 |     .where(eq(gameWallets.alienId, auth.alienId)).limit(1);
+    21 |
+    22 |   if (wallets.length === 0 || wallets[0].balance < TRIAL_COST) { {
+    severity: undefined,
+    code: undefined,
+    detail: undefined,
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: undefined,
+    line: undefined,
+    routine: undefined,
+    sourceError: TypeError: fetch failed
+        at async POST (src/app/api/wallet/spend/route.ts:19:18)
+      17 |
+      18 |   // Get current balance
+    > 19 |   const wallets = await db.select().from(gameWallets)
+         |                  ^
+      20 |     .where(eq(gameWallets.alienId, auth.alienId)).limit(1);
+      21 |
+      22 |   if (wallets.length === 0 || wallets[0].balance < TRIAL_COST) { {
+      [cause]: [Error: getaddrinfo ENOTFOUND hostname] {
+        errno: -3008,
+        code: 'ENOTFOUND',
+        syscall: 'getaddrinfo',
+        hostname: 'hostname'
+      }
+    }
+  }
+}
+ POST /api/wallet/spend 500 in 666ms
+ GET / 200 in 41ms

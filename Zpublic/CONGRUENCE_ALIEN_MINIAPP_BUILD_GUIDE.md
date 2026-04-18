@@ -20,7 +20,7 @@
 8. [UI Components — Mobile-First](#8-ui-components--mobile-first)
 9. [API Routes (Webhooks & Score Submission)](#9-api-routes-webhooks--score-submission)
 10. [Deeplinks & Manifest](#10-deeplinks--manifest)
-11. [Leaderboard (Upstash Redis)](#11-leaderboard-upstash-redis)
+11. [Leaderboard (Neon Postgres)](#11-leaderboard-neon-postgres)
 12. [Alien-Themed Visual Design](#12-alien-themed-visual-design)
 13. [Build & Deploy to Vercel](#13-build--deploy-to-vercel)
 14. [Post-Deploy: Register Miniapp on Alien](#14-post-deploy-register-miniapp-on-alien)
@@ -86,7 +86,8 @@ npm install \
   @solana/spl-token \
   zustand \
   lucide-react \
-  @upstash/redis \
+  @neondatabase/serverless \
+  drizzle-orm \
   class-variance-authority \
   clsx \
   tailwind-merge \
@@ -200,9 +201,8 @@ NEXT_PUBLIC_TRIAL_COST_TOKENS=5
 # Free trials before payment required
 NEXT_PUBLIC_FREE_TRIALS=3
 
-# ── Leaderboard (Upstash Redis) ─────────────────────────────────
-UPSTASH_REDIS_REST_URL=https://your-db.upstash.io
-UPSTASH_REDIS_REST_TOKEN=your_upstash_token_here
+# ── Database (Neon/Postgres) ────────────────────────────────────
+DATABASE_URL=postgresql://user:password@hostname/dbname?sslmode=require
 
 # ── App URL (set after Vercel deploy) ───────────────────────────
 NEXT_PUBLIC_APP_URL=https://congruence.vercel.app
@@ -219,8 +219,7 @@ NEXT_PUBLIC_TREASURY_WALLET=
 SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
 NEXT_PUBLIC_TRIAL_COST_TOKENS=5
 NEXT_PUBLIC_FREE_TRIALS=3
-UPSTASH_REDIS_REST_URL=
-UPSTASH_REDIS_REST_TOKEN=
+DATABASE_URL=
 NEXT_PUBLIC_APP_URL=
 ```
 
@@ -2412,23 +2411,22 @@ useEffect(() => {
 
 ---
 
-## 11. LEADERBOARD (UPSTASH REDIS)
+## 11. LEADERBOARD (NEON POSTGRES)
 
 ### Setup
 
-1. Go to [console.upstash.com](https://console.upstash.com) and create a **Redis** database
-2. Select the region closest to your Vercel deployment
-3. Copy the `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to `.env.local` and to Vercel environment variables
+1. Go to [neon.tech](https://neon.tech) and create a **Postgres** database
+2. Copy the `DATABASE_URL` to `.env.local` and to Vercel environment variables.
+3. Run migrations or apply the schema via Drizzle Kit.
 
-### Schema
+### Schema (Drizzle)
 
-| Redis Key | Type | Description |
-|-----------|------|-------------|
-| `leaderboard:global` | Sorted Set | All-time top scores (member = JSON, score = integer) |
-| `leaderboard:daily:YYYY-MM-DD` | Sorted Set | Daily scores (expires in 7 days) |
-| `nonce:<nonce>` | String | Used nonces (expires in 24h) |
-| `payment:<txSig>` | String | Used payment tx (permanent) |
-| `purchases:<alienId>` | List | Purchase history per user |
+The following tables are managed via Drizzle ORM in `src/lib/db/schema.ts`:
+- `users`: Registered users.
+- `leaderboard`: Global and daily high scores.
+- `nonces`: Anti-replay protection for scores.
+- `game_wallets`: In-game ALIEN token balances.
+- `wallet_ledger`: Transaction history for wallets.
 
 ---
 

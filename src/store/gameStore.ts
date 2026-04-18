@@ -35,7 +35,7 @@ interface GameState {
   selectCell: (row: number, col: number) => void;
   enterNumber: (num: number) => void;
   clearCell: () => void;
-  useHint: () => void;
+  useHint: (alienId: string) => Promise<void>;
   undo: () => void;
   tick: () => void;
   finishGame: () => void;
@@ -123,20 +123,33 @@ export const useGameStore = create<GameState>()(
         });
       },
 
-      useHint: () => {
+      useHint: async (alienId: string) => {
         const { puzzle, hints, freeHintsRemaining, alienTokenBalance } = get();
         if (!puzzle) return;
 
-        let cost = 0;
         let newFreeHints = freeHintsRemaining;
         let newBalance = alienTokenBalance;
 
         if (freeHintsRemaining > 0) {
           newFreeHints--;
         } else {
-          cost = 10;
-          if (alienTokenBalance < cost) return;
-          newBalance -= cost;
+          // Gated by server-side token deduction
+          try {
+            const res = await fetch('/api/game/use-hint', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ alienId })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+              alert(data.error || "Failed to use hint");
+              return;
+            }
+            newBalance = data.balance;
+          } catch (err) {
+            console.error("Hint deduction error:", err);
+            return;
+          }
         }
 
         const hint = getHint(puzzle);

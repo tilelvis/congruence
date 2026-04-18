@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Redis } from '@upstash/redis';
+import { db } from '@/lib/db';
+import { leaderboard, nonces } from '@/lib/db/schema';
 import { hashPayload, buildScorePayload } from '@/lib/scoreVerification';
-
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
 
 // Scoring plausibility check
 const MIN_TIMES: Record<string, number> = {
@@ -34,27 +30,30 @@ export async function POST(req: NextRequest) {
   }
 
   // Minimum time check
-  const minTime = MIN_TIMES[difficulty as keyof typeof MIN_TIMES] ?? 30;
+  const minTime = MIN_TIMES[difficulty] ?? 30;
   if (elapsed < minTime) {
     return NextResponse.json({ error: 'Score rejected: too fast' }, { status: 400 });
   }
 
-  // Nonce replay check
-  const nonceKey = `nonce:${nonce}`;
-  const exists = await redis.exists(nonceKey);
-  if (exists) {
-    return NextResponse.json({ error: 'Duplicate submission' }, { status: 400 });
+  try {
+    // Nonce replay check & insert
+    await db.insert(nonces).values({ nonce });
+
+    // Write to leaderboard
+    await db.insert(leaderboard).values({
+      alienId,
+      username,
+      score,
+      difficulty,
+      size,
+    });
+
+    return NextResponse.json({ success: true, score });
+  } catch (error: any) {
+    if (error.code === '23505') { // Postgres unique violation
+      return NextResponse.json({ error: 'Duplicate submission' }, { status: 400 });
+    }
+    console.error('Score submission error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-  await redis.setex(nonceKey, 86400, '1'); // Expire nonce after 24h
-
-  // Write to sorted set (global and daily)
-  const today = new Date().toISOString().split('T')[0];
-  const entry = JSON.stringify({ alienId, username, score, difficulty, size });
-
-  await redis.zadd('leaderboard:global', { score, member: entry });
-  await redis.zadd(`leaderboard:daily:${today}`, { score, member: entry });
-  // Daily leaderboard expires after 7 days
-  await redis.expire(`leaderboard:daily:${today}`, 7 * 86400);
-
-  return NextResponse.json({ success: true, score });
 }

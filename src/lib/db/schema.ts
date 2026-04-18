@@ -72,3 +72,20 @@ export const withdrawals = pgTable('withdrawals', {
   requestedAt: timestamp('requested_at').defaultNow().notNull(),
   completedAt: timestamp('completed_at'),
 });
+
+// Leaderboard entries
+export const leaderboard = pgTable('leaderboard', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  alienId: text('alien_id').notNull(),
+  username: text('username').notNull(),
+  score: integer('score').notNull(),
+  difficulty: text('difficulty').notNull(),
+  size: integer('size').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Nonces for score submission (anti-replay)
+export const nonces = pgTable('nonces', {
+  nonce: text('nonce').primaryKey(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
