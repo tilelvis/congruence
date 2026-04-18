@@ -1,8 +1,7 @@
-// src/components/SplashScreen.tsx
 'use client';
 
 import { useGameStore } from '@/store/gameStore';
-import { useAlien } from '@/lib/alienClient';
+import { useAlien } from '@alien_org/react';
 
 export function SplashScreen() {
   const { goTo } = useGameStore();
@@ -78,6 +77,7 @@ export function SplashScreen() {
             boxShadow: '0 0 30px rgba(0,255,136,0.4), 0 4px 20px rgba(0,0,0,0.5)',
             transition: 'transform 0.1s, box-shadow 0.1s',
           }}
+          // @ts-ignore
           onTouchStart={e => (e.currentTarget.style.transform = 'scale(0.96)')}
           // @ts-ignore
           onTouchEnd={e => (e.currentTarget.style.transform = 'scale(1)')}
@@ -85,10 +85,27 @@ export function SplashScreen() {
           🚀 LAUNCH GAME
         </button>
         <button
+          onClick={() => goTo('wallet')}
+          style={{
+            width: '100%', padding: '14px 0', borderRadius: 16,
+            fontFamily: 'var(--font-exo2)', fontWeight: 600, fontSize: 14,
+            background: 'rgba(139,92,246,0.08)',
+            color: '#8b5cf6',
+            border: '1.5px solid rgba(139,92,246,0.3)',
+            cursor: 'pointer', transition: 'transform 0.1s',
+          }}
+          // @ts-ignore
+          onTouchStart={e => (e.currentTarget.style.transform = 'scale(0.96)')}
+          // @ts-ignore
+          onTouchEnd={e => (e.currentTarget.style.transform = 'scale(1)')}
+        >
+          ⚡ Game Wallet
+        </button>
+        <button
           onClick={() => goTo('leaderboard')}
           style={{
             width: '100%',
-            padding: '16px 0',
+            padding: '14px 0',
             borderRadius: 16,
             fontFamily: 'var(--font-orbitron)',
             fontWeight: 700,
@@ -100,6 +117,7 @@ export function SplashScreen() {
             cursor: 'pointer',
             transition: 'transform 0.1s',
           }}
+          // @ts-ignore
           onTouchStart={e => (e.currentTarget.style.transform = 'scale(0.96)')}
           // @ts-ignore
           onTouchEnd={e => (e.currentTarget.style.transform = 'scale(1)')}
@@ -110,7 +128,7 @@ export function SplashScreen() {
           onClick={() => goTo('tutorial')}
           style={{
             width: '100%',
-            padding: '14px 0',
+            padding: '12px 0',
             borderRadius: 16,
             fontFamily: 'var(--font-exo2, sans-serif)',
             fontWeight: 600,
@@ -121,6 +139,7 @@ export function SplashScreen() {
             cursor: 'pointer',
             transition: 'transform 0.1s',
           }}
+          // @ts-ignore
           onTouchStart={e => (e.currentTarget.style.transform = 'scale(0.96)')}
           // @ts-ignore
           onTouchEnd={e => (e.currentTarget.style.transform = 'scale(1)')}

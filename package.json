@@ -8,14 +8,17 @@
     "start": "next start"
   },
   "dependencies": {
-    "@alien-id/miniapp-sdk": "file:./packages/miniapp-sdk",
-    "@alien-id/sso-sdk-js": "file:./packages/sso-sdk-js",
+    "@alien_org/auth-client": "file:packages/alien-org-auth-client",
+    "@alien_org/react": "file:packages/alien-org-react",
+    "@neondatabase/serverless": "^1.1.0",
     "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1.98.4",
+    "@tanstack/react-query": "^5.99.0",
     "@upstash/redis": "^1.37.0",
     "bs58": "^6.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "drizzle-orm": "^0.45.2",
     "jose": "^6.2.2",
     "lucide-react": "^1.8.0",
     "next": "16.2.4",
@@ -29,6 +32,7 @@
     "@types/node": "^20.19.39",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.10",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5"

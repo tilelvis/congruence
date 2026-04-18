@@ -1,9 +1,8 @@
-// src/components/DifficultySelect.tsx
 'use client';
 
 import { useGameStore } from '@/store/gameStore';
-import { useTrialGate } from './PaymentGate';
 import { buzz } from '@/lib/alienClient';
+import { useAlien } from '@alien_org/react';
 
 const DIFFICULTIES = [
   { id: 'novice', label: 'CADET', desc: '5×5 • Mod 3 • Gentle warmup', icon: '🌱', size: 5, color: '#10b981', glow: 'rgba(16,185,129,0.3)' },
@@ -16,12 +15,29 @@ const DIFFICULTIES = [
 
 export function DifficultySelect() {
   const { startGame, goTo } = useGameStore();
-  const { canPlay, consumeTrial } = useTrialGate();
+  const { authToken } = useAlien();
 
-  function handleSelect(size: number, difficulty: string) {
-    if (!canPlay()) { goTo('game'); return; }
-    consumeTrial();
+  async function handleSelect(size: number, difficulty: string) {
+    if (!authToken) return;
     buzz('medium');
+
+    // Spend 1 ALIEN from game wallet (server-side, anti-cheat)
+    const res = await fetch('/api/wallet/spend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+      body: JSON.stringify({ difficulty }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      if (data.error === 'insufficient_balance') {
+        // Navigate to wallet to top up
+        goTo('wallet');
+        return;
+      }
+      return;
+    }
+
     startGame(size, difficulty);
   }
 
@@ -59,6 +75,7 @@ export function DifficultySelect() {
           <button
             key={d.id}
             onClick={() => handleSelect(d.size, d.id)}
+            // @ts-ignore
             onTouchStart={e => {
               e.currentTarget.style.transform = 'scale(0.97)';
               e.currentTarget.style.borderColor = d.color + '80';

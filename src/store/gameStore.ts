@@ -4,7 +4,7 @@ import { isSolved, getHint } from '@/lib/puzzleSolver';
 import { calculateScore } from '@/lib/scoreVerification';
 import { persist } from 'zustand/middleware';
 
-export type Screen = 'splash' | 'difficulty' | 'game' | 'victory' | 'leaderboard' | 'tutorial';
+export type Screen = 'splash' | 'difficulty' | 'game' | 'victory' | 'leaderboard' | 'tutorial' | 'wallet';
 
 interface HistoryEntry {
   row: number;
