@@ -1,94 +1,62 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap');
+@import "tailwindcss";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@theme {
+  --color-space-950: #020408;
+  --color-space-900: #050d18;
+  --color-space-800: #0a1628;
+  --color-space-700: #0f2040;
+  --color-space-600: #163058;
 
-:root {
-  --g: #00ff88; /* alien green */
-  --c: #06b6d4; /* alien cyan */
-  --p: #8b5cf6; /* alien purple */
-  --gd: #f59e0b; /* gold */
-  --s950: #020408;
-  --s900: #050d18;
-  --s800: #0a1628;
-  --s700: #0f2040;
-  --s600: #163058;
+  --color-alien-green: #00ff88;
+  --color-alien-purple: #8b5cf6;
+  --color-alien-blue: #3b82f6;
+  --color-alien-cyan: #06b6d4;
+  --color-alien-gold: #f59e0b;
+  --color-alien-red: #ef4444;
+
+  --color-cage-0: #DC2626;
+  --color-cage-1: #2563EB;
+  --color-cage-2: #16A34A;
+  --color-cage-3: #CA8A04;
+  --color-cage-4: #9333EA;
+  --color-cage-5: #DB2777;
+  --color-cage-6: #0891B2;
+  --color-cage-7: #EA580C;
+
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-scanline: scanline 2s linear infinite;
+  --animate-glow: glow 2s ease-in-out infinite alternate;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes glow {
+    from { text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88; }
+    to:   { text-shadow: 0 0 20px #00ff88, 0 0 40px #00ff88, 0 0 60px #00ff88; }
+  }
+  @keyframes scanline {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+  }
 }
 
-* {
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  box-sizing: border-box;
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  html, body {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
-html, body {
-  overscroll-behavior: none;
-  background: var(--s950);
-  height: 100%;
-  overflow: hidden;
+@layer utilities {
+  .safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+  }
 }
-
-/* Orbitron for all headings and numbers */
-h1, h2, h3, .font-orbitron {
-  font-family: var(--font-orbitron), monospace;
-}
-
-/* Space grid background — applied to GameShell */
-.space-grid {
-  background-image:
-    linear-gradient(rgba(0,255,136,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,255,136,0.04) 1px, transparent 1px);
-  background-size: 28px 28px;
-}
-
-/* Neon glow text */
-.glow-green {
-  text-shadow: 0 0 10px #00ff88, 0 0 30px #00ff8860, 0 0 60px #00ff8830;
-}
-.glow-cyan {
-  text-shadow: 0 0 10px #06b6d4, 0 0 30px #06b6d460;
-}
-.glow-gold {
-  text-shadow: 0 0 10px #f59e0b, 0 0 30px #f59e0b60;
-}
-
-/* Scanline overlay */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0,0,0,0.15) 2px,
-    rgba(0,0,0,0.15) 4px
-  );
-  pointer-events: none;
-  z-index: 9999;
-}
-
-/* Pulsing border for selected cell */
-@keyframes cell-pulse {
-  0%, 100% { box-shadow: 0 0 0 2px #3b82f6, 0 0 12px #3b82f640; }
-  50% { box-shadow: 0 0 0 2px #3b82f6, 0 0 20px #3b82f680; }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
-}
-
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes spin-slow {
-  to { transform: rotate(360deg); }
-}
-
-.animate-float { animation: float 4s ease-in-out infinite; }
-.animate-fade-in-up { animation: fadeInUp 0.4s ease forwards; }
-.animate-cell-pulse { animation: cell-pulse 1.5s ease-in-out infinite; }
