@@ -1,6 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // PUZZLE GENERATOR — Latin square + modular cage generator
 // ─────────────────────────────────────────────────────────────────────────────
+import { countSolutions } from './puzzleSolver';
 
 export interface Cell {
   row: number;
@@ -74,7 +75,7 @@ function generateCages(n: number, targetCount: number): Cage[] {
   for (let sr = 0; sr < n; sr++) {
     for (let sc = 0; sc < n; sc++) {
       if (visited[sr][sc]) continue;
-      const size = Math.max(2, Math.min(5, avgSize + randomInt(-1, 1)));
+      const size = Math.max(2, Math.min(4, avgSize + randomInt(-1, 1)));
       const cells: Array<{ row: number; col: number }> = [];
       const queue = [{ row: sr, col: sc }];
       visited[sr][sc] = true;
@@ -92,11 +93,14 @@ function generateCages(n: number, targetCount: number): Cage[] {
         }
       }
 
+      // Procedural modulus and remainder
+      const modulus = randomInt(3, 5);
+
       cages.push({
         id: cageId,
         cells,
-        modulus: 0,
-        remainder: 0,
+        modulus,
+        remainder: 0, // Assigned later based on solution
         color: CAGE_COLORS[cageId % CAGE_COLORS.length]
       });
       cageId++;
@@ -123,48 +127,34 @@ function generateCages(n: number, targetCount: number): Cage[] {
   return cages;
 }
 
-function assignConstraints(cages: Cage[], solution: number[][], modulus: number): Cage[] {
+function assignConstraints(cages: Cage[], solution: number[][]): Cage[] {
   return cages.map(cage => {
     const sum = cage.cells.reduce((s, c) => s + solution[c.row][c.col], 0);
-    return { ...cage, modulus, remainder: sum % modulus };
+    return { ...cage, remainder: sum % cage.modulus };
   });
 }
 
-function hasUniqueSolution(grid: Cell[][], cages: Cage[]): boolean {
-  const n = grid.length;
-  for (let i = 0; i < n; i++) {
-    const rv = new Set<number>(), cv = new Set<number>();
-    for (let j = 0; j < n; j++) {
-      const r = grid[i][j].value, c = grid[j][i].value;
-      if (r !== 0) { if (rv.has(r)) return false; rv.add(r); }
-      if (c !== 0) { if (cv.has(c)) return false; cv.add(c); }
-    }
-  }
-  for (const cage of cages) {
-    const filled = cage.cells.filter(c => grid[c.row][c.col].value !== 0);
-    if (filled.length === cage.cells.length) {
-      const sum = filled.reduce((s, c) => s + grid[c.row][c.col].value, 0);
-      if (sum % cage.modulus !== cage.remainder) return false;
-    }
-  }
-  return true;
+function checkUniqueness(grid: Cell[][], cages: Cage[]): boolean {
+  const size = grid.length;
+  const initialGrid = grid.map(r => r.map(c => c.value));
+  return countSolutions(size, initialGrid, cages, 2) === 1;
 }
 
 export function generatePuzzle(size: number, difficulty: string): Puzzle {
-  const configs: Record<string, { modulus: number; cageCount: number; clueFrac: number }> = {
-    novice: { modulus: 3, cageCount: 8,  clueFrac: 0.55 },
-    easy:   { modulus: 3, cageCount: 10, clueFrac: 0.50 },
-    medium: { modulus: 4, cageCount: 12, clueFrac: 0.45 },
-    hard:   { modulus: 4, cageCount: 14, clueFrac: 0.38 },
-    expert: { modulus: 5, cageCount: 16, clueFrac: 0.32 },
-    master: { modulus: 5, cageCount: 18, clueFrac: 0.28 },
+  const configs: Record<string, { cageCount: number; clueFrac: number }> = {
+    novice: { cageCount: 8,  clueFrac: 0.45 },
+    easy:   { cageCount: 10, clueFrac: 0.40 },
+    medium: { cageCount: 12, clueFrac: 0.35 },
+    hard:   { cageCount: 14, clueFrac: 0.30 },
+    expert: { cageCount: 16, clueFrac: 0.25 },
+    master: { cageCount: 18, clueFrac: 0.20 },
   };
   const cfg = configs[difficulty] ?? configs.medium;
   const targetClues = Math.floor(size * size * cfg.clueFrac);
 
   const solution = generateLatinSquare(size);
   let cages = generateCages(size, cfg.cageCount);
-  cages = assignConstraints(cages, solution, cfg.modulus);
+  cages = assignConstraints(cages, solution);
 
   // Build initial full grid
   const grid: Cell[][] = Array.from({ length: size }, (_, r) =>
@@ -177,20 +167,20 @@ export function generatePuzzle(size: number, difficulty: string): Puzzle {
     }))
   );
 
-  // Punch holes
+  // Punch holes with uniqueness check
   const positions = shuffleArray(
     Array.from({ length: size * size }, (_, i) => ({ r: Math.floor(i / size), c: i % size }))
   );
   let removed = 0;
-  const toRemove = size * size - targetClues;
+  const maxToRemove = size * size - targetClues;
 
   for (const { r, c } of positions) {
-    if (removed >= toRemove) break;
+    if (removed >= maxToRemove) break;
     const orig = grid[r][c].value;
     grid[r][c].value = 0;
     grid[r][c].isGiven = false;
 
-    if (hasUniqueSolution(grid, cages)) {
+    if (checkUniqueness(grid, cages)) {
       removed++;
     } else {
       grid[r][c].value = orig;

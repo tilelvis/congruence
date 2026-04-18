@@ -8,14 +8,34 @@ import { formatTime, formatScore } from '@/lib/utils';
 import { hashPayload, buildScorePayload } from '@/lib/scoreVerification';
 
 export function VictoryScreen() {
-  const { score, elapsed, hints, errors, puzzle, goTo, startGame } = useGameStore();
+  const { score, elapsed, hints, errors, puzzle, goTo, nextLevel, level } = useGameStore();
   const { user } = useAlien();
   const [submitted, setSubmitted] = useState(false);
+  const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
     if (!submitted && user && puzzle) {
       submitScore();
     }
+
+    const timer = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    const autoNext = setTimeout(() => {
+      nextLevel();
+    }, 3500);
+
+    return () => {
+      clearInterval(timer);
+      clearTimeout(autoNext);
+    };
   }, []);
 
   async function submitScore() {
@@ -64,10 +84,10 @@ export function VictoryScreen() {
           fontFamily: 'var(--font-orbitron)', fontSize: 26, fontWeight: 900,
           color: '#00ff88', letterSpacing: '0.06em', margin: 0,
         }}>
-          SIGNAL DECODED!
+          LVL {level} COMPLETE!
         </h2>
         <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 6, fontFamily: 'var(--font-orbitron)', letterSpacing: '0.1em' }}>
-          {puzzle?.difficulty?.toUpperCase()} · {puzzle?.size}×{puzzle?.size}
+          SIGNAL DECODED
         </p>
       </div>
 
@@ -99,28 +119,23 @@ export function VictoryScreen() {
         ))}
       </div>
 
-      {/* Buttons */}
+      {/* Actions */}
       <div style={{ width: '100%', maxWidth: 300, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {/* Play Again */}
-        <button onClick={() => puzzle && startGame(puzzle.size, puzzle.difficulty)} style={{
+        <button onClick={() => nextLevel()} style={{
           width: '100%', padding: '18px 0', borderRadius: 14,
           fontFamily: 'var(--font-orbitron)', fontWeight: 700, fontSize: 15,
           letterSpacing: '0.08em',
           background: 'linear-gradient(135deg, #00ff88, #06b6d4)',
           color: '#020408', border: 'none', cursor: 'pointer',
           boxShadow: '0 0 30px rgba(0,255,136,0.35)',
-        }}>▶ PLAY AGAIN</button>
-        <button onClick={() => goTo('leaderboard')} style={{
-          width: '100%', padding: '15px 0', borderRadius: 14,
-          fontFamily: 'var(--font-orbitron)', fontWeight: 700, fontSize: 13,
-          background: 'rgba(245,158,11,0.08)', color: '#f59e0b',
-          border: '1.5px solid rgba(245,158,11,0.3)', cursor: 'pointer',
-        }}>🏆 LEADERBOARD</button>
-        <button onClick={() => goTo('difficulty')} style={{
+        }}>
+          NEXT LEVEL {countdown > 0 ? `(${countdown}s)` : ''}
+        </button>
+        <button onClick={() => goTo('splash')} style={{
           width: '100%', padding: '13px 0', borderRadius: 14, fontSize: 13,
           background: 'rgba(15,32,64,0.6)', color: 'rgba(255,255,255,0.4)',
           border: '1.5px solid rgba(255,255,255,0.1)', cursor: 'pointer',
-        }}>New Mission</button>
+        }}>Main Menu</button>
       </div>
     </div>
   );

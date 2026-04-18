@@ -9,6 +9,14 @@ export interface ValidationResult {
   pendingCages: number[];
 }
 
+/**
+ * Checks for Latin Square conflicts in a list of cell values, ignoring zeros.
+ */
+const hasConflict = (values: number[]): boolean => {
+  const filtered = values.filter(v => v !== 0);
+  return new Set(filtered).size !== filtered.length;
+};
+
 export function validatePuzzle(puzzle: Puzzle): ValidationResult {
   const { size, grid, cages } = puzzle;
   const errors: ValidationResult['errors'] = [];
@@ -18,20 +26,30 @@ export function validatePuzzle(puzzle: Puzzle): ValidationResult {
 
   const val = (r: number, c: number) => grid[r][c].playerValue || grid[r][c].value;
 
-  // Latin square check
+  // Latin square check (non-blocking for zeros)
   for (let i = 0; i < size; i++) {
-    const rowMap = new Map<number, number[]>();
-    const colMap = new Map<number, number[]>();
+    const rowVals: number[] = [];
+    const colVals: number[] = [];
     for (let j = 0; j < size; j++) {
-      const rv = val(i, j), cv = val(j, i);
-      if (rv) { if (!rowMap.has(rv)) rowMap.set(rv, []); rowMap.get(rv)!.push(j); }
-      if (cv) { if (!colMap.has(cv)) colMap.set(cv, []); colMap.get(cv)!.push(j); }
+      rowVals.push(val(i, j));
+      colVals.push(val(j, i));
     }
-    for (const [v, cols] of rowMap) {
-      if (cols.length > 1) cols.forEach(c => errors.push({ row: i, col: c, reason: `Dup ${v} row ${i+1}` }));
+
+    if (hasConflict(rowVals)) {
+      // Find exact cells in conflict
+      const counts = new Map<number, number>();
+      rowVals.filter(v => v !== 0).forEach(v => counts.set(v, (counts.get(v) || 0) + 1));
+      rowVals.forEach((v, j) => {
+        if (v !== 0 && counts.get(v)! > 1) errors.push({ row: i, col: j, reason: `Duplicate ${v} in row` });
+      });
     }
-    for (const [v, rows] of colMap) {
-      if (rows.length > 1) rows.forEach(r => errors.push({ row: r, col: i, reason: `Dup ${v} col ${i+1}` }));
+
+    if (hasConflict(colVals)) {
+      const counts = new Map<number, number>();
+      colVals.filter(v => v !== 0).forEach(v => counts.set(v, (counts.get(v) || 0) + 1));
+      colVals.forEach((v, r) => {
+        if (v !== 0 && counts.get(v)! > 1) errors.push({ row: r, col: i, reason: `Duplicate ${v} in column` });
+      });
     }
   }
 
@@ -64,13 +82,86 @@ export function isSolved(puzzle: Puzzle): boolean {
 }
 
 export function getHint(puzzle: Puzzle): { row: number; col: number; value: number } | null {
+  const emptyCells: Array<{r: number, c: number}> = [];
   for (let i = 0; i < puzzle.grid.length; i++) {
     for (let j = 0; j < puzzle.grid[i].length; j++) {
       const cell = puzzle.grid[i][j];
       if (!cell.isGiven && cell.playerValue === 0) {
-        return { row: i, col: j, value: puzzle.solution[i][j] };
+        emptyCells.push({r: i, c: j});
       }
     }
   }
-  return null;
+  if (emptyCells.length === 0) return null;
+  const target = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+  return { row: target.r, col: target.c, value: puzzle.solution[target.r][target.c] };
+}
+
+/**
+ * Backtracking solver to count solutions.
+ */
+export function countSolutions(
+  size: number,
+  initialGrid: number[][], // 0 for empty
+  cages: Cage[],
+  limit: number = 2
+): number {
+  let solutions = 0;
+  const grid = initialGrid.map(row => [...row]);
+
+  function solve(r: number, c: number) {
+    if (solutions >= limit) return;
+    if (r === size) {
+      solutions++;
+      return;
+    }
+
+    const nextR = c === size - 1 ? r + 1 : r;
+    const nextC = c === size - 1 ? 0 : c + 1;
+
+    if (grid[r][c] !== 0) {
+      solve(nextR, nextC);
+      return;
+    }
+
+    for (let v = 1; v <= size; v++) {
+      if (isSafe(r, c, v)) {
+        grid[r][c] = v;
+        solve(nextR, nextC);
+        grid[r][c] = 0;
+        if (solutions >= limit) return;
+      }
+    }
+  }
+
+  function isSafe(r: number, c: number, v: number): boolean {
+    // Row check
+    for (let i = 0; i < size; i++) if (grid[r][i] === v) return false;
+    // Col check
+    for (let i = 0; i < size; i++) if (grid[i][c] === v) return false;
+
+    // Cage check
+    const cage = cages.find(cg => cg.cells.some(cell => cell.row === r && cell.col === c));
+    if (cage) {
+      const cageCells = cage.cells;
+      let sum = v;
+      let filled = 1;
+      for (const cell of cageCells) {
+        if (cell.row === r && cell.col === c) continue;
+        const val = grid[cell.row][cell.col];
+        if (val !== 0) {
+          sum += val;
+          filled++;
+        }
+      }
+      // If cage is fully filled, check modulus
+      if (filled === cageCells.length) {
+        if (sum % cage.modulus !== cage.remainder) return false;
+      }
+    }
+
+    return true;
+  }
+
+  solve(0, 0);
+  return solutions;
 }

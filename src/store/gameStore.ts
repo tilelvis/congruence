@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { generatePuzzle, type Puzzle } from '@/lib/puzzleGenerator';
 import { isSolved, getHint } from '@/lib/puzzleSolver';
 import { calculateScore } from '@/lib/scoreVerification';
+import { persist } from 'zustand/middleware';
 
 export type Screen = 'splash' | 'difficulty' | 'game' | 'victory' | 'leaderboard' | 'tutorial';
 
@@ -22,9 +23,15 @@ interface GameState {
   history: HistoryEntry[];
   isTimerRunning: boolean;
 
+  // Economy & Progression
+  freeHintsRemaining: number;
+  alienTokenBalance: number;
+  level: number;
+  gameNumber: number;
+
   // Actions
   goTo: (screen: Screen) => void;
-  startGame: (size: number, difficulty: string) => void;
+  startGame: (size?: number, difficulty?: string) => void;
   selectCell: (row: number, col: number) => void;
   enterNumber: (num: number) => void;
   clearCell: () => void;
@@ -32,126 +39,172 @@ interface GameState {
   undo: () => void;
   tick: () => void;
   finishGame: () => void;
+  nextLevel: () => void;
   resetAll: () => void;
+  addTokens: (amount: number) => void;
 }
 
-export const useGameStore = create<GameState>((set, get) => ({
-  screen: 'splash',
-  puzzle: null,
-  selectedCell: null,
-  elapsed: 0,
-  hints: 0,
-  errors: 0,
-  score: 0,
-  history: [],
-  isTimerRunning: false,
+export const useGameStore = create<GameState>()(
+  persist(
+    (set, get) => ({
+      screen: 'splash',
+      puzzle: null,
+      selectedCell: null,
+      elapsed: 0,
+      hints: 0,
+      errors: 0,
+      score: 0,
+      history: [],
+      isTimerRunning: false,
 
-  goTo: (screen) => set({ screen }),
+      freeHintsRemaining: 3,
+      alienTokenBalance: 100, // Starting balance
+      level: 1,
+      gameNumber: 1,
 
-  startGame: (size, difficulty) => {
-    const puzzle = generatePuzzle(size, difficulty);
-    set({
-      puzzle, screen: 'game',
-      selectedCell: null, elapsed: 0, hints: 0,
-      errors: 0, score: 0, history: [], isTimerRunning: true,
-    });
-  },
+      goTo: (screen) => set({ screen }),
 
-  selectCell: (row, col) => set({ selectedCell: { row, col } }),
+      startGame: (size, difficulty) => {
+        const state = get();
+        const effectiveSize = size ?? (state.level === 1 ? 5 : state.level === 2 ? 6 : 8);
+        const effectiveDiff = difficulty ?? (state.level === 1 ? 'novice' : state.level === 2 ? 'medium' : 'hard');
 
-  enterNumber: (num) => {
-    const { puzzle, selectedCell, errors, history } = get();
-    if (!puzzle || !selectedCell) return;
-    const { row, col } = selectedCell;
-    const cell = puzzle.grid[row][col];
-    if (cell.isGiven) return;
+        const puzzle = generatePuzzle(effectiveSize, effectiveDiff);
+        set({
+          puzzle, screen: 'game',
+          selectedCell: null, elapsed: 0, hints: 0,
+          errors: 0, score: 0, history: [], isTimerRunning: true,
+          freeHintsRemaining: 3,
+        });
+      },
 
-    const newGrid = puzzle.grid.map(r => r.map(c => ({ ...c, notes: new Set(c.notes) })));
-    const prev = newGrid[row][col].playerValue;
-    newGrid[row][col].playerValue = num;
-    newGrid[row][col].notes.clear();
+      selectCell: (row, col) => set({ selectedCell: { row, col } }),
 
-    // Check dupe
-    let newErrors = errors;
-    const rowVals = newGrid[row]
-      .filter((_, j) => j !== col)
-      .map(c => c.playerValue || c.value)
-      .filter(Boolean);
-    const colVals = newGrid
-      .filter((_, i) => i !== row)
-      .map(r => r[col].playerValue || r[col].value)
-      .filter(Boolean);
-    if (rowVals.includes(num) || colVals.includes(num)) newErrors++;
+      enterNumber: (num) => {
+        const { puzzle, selectedCell, errors, history } = get();
+        if (!puzzle || !selectedCell) return;
+        const { row, col } = selectedCell;
+        const cell = puzzle.grid[row][col];
+        if (cell.isGiven) return;
 
-    set({
-      puzzle: { ...puzzle, grid: newGrid },
-      errors: newErrors,
-      history: [...history, { row, col, prev }],
-    });
-  },
+        const newGrid = puzzle.grid.map(r => r.map(c => ({ ...c, notes: new Set(c.notes) })));
+        const prev = newGrid[row][col].playerValue;
+        newGrid[row][col].playerValue = num;
+        newGrid[row][col].notes.clear();
 
-  clearCell: () => {
-    const { puzzle, selectedCell, history } = get();
-    if (!puzzle || !selectedCell) return;
-    const { row, col } = selectedCell;
-    if (puzzle.grid[row][col].isGiven) return;
-    const prev = puzzle.grid[row][col].playerValue;
-    const newGrid = puzzle.grid.map(r => r.map(c => ({ ...c, notes: new Set(c.notes) })));
-    newGrid[row][col].playerValue = 0;
-    set({
-      puzzle: { ...puzzle, grid: newGrid },
-      history: [...history, { row, col, prev }],
-    });
-  },
+        // Immediate feedback error checking
+        let newErrors = errors;
+        const rowVals = newGrid[row].map(c => c.playerValue || c.value);
+        const colVals = newGrid.map(r => r[col].playerValue || r[col].value);
 
-  useHint: () => {
-    const { puzzle, hints } = get();
-    if (!puzzle) return;
-    const hint = getHint(puzzle);
-    if (!hint) return;
-    const newGrid = puzzle.grid.map(r => r.map(c => ({ ...c, notes: new Set(c.notes) })));
-    newGrid[hint.row][hint.col].playerValue = hint.value;
-    set({
-      puzzle: { ...puzzle, grid: newGrid },
-      hints: hints + 1,
-      selectedCell: { row: hint.row, col: hint.col },
-    });
-  },
+        const hasRowConflict = rowVals.filter(v => v === num).length > 1;
+        const hasColConflict = colVals.filter(v => v === num).length > 1;
 
-  undo: () => {
-    const { puzzle, history } = get();
-    if (!puzzle || history.length === 0) return;
-    const last = history[history.length - 1];
-    const newGrid = puzzle.grid.map(r => r.map(c => ({ ...c, notes: new Set(c.notes) })));
-    newGrid[last.row][last.col].playerValue = last.prev;
-    set({
-      puzzle: { ...puzzle, grid: newGrid },
-      history: history.slice(0, -1),
-    });
-  },
+        if (hasRowConflict || hasColConflict) newErrors++;
 
-  tick: () => {
-    const { isTimerRunning, elapsed, puzzle } = get();
-    if (!isTimerRunning) return;
-    const newElapsed = elapsed + 1;
-    set({ elapsed: newElapsed });
+        set({
+          puzzle: { ...puzzle, grid: newGrid },
+          errors: newErrors,
+          history: [...history, { row, col, prev }],
+        });
+      },
 
-    // Auto-check on every tick
-    if (puzzle && isSolved(puzzle)) {
-      get().finishGame();
+      clearCell: () => {
+        const { puzzle, selectedCell, history } = get();
+        if (!puzzle || !selectedCell) return;
+        const { row, col } = selectedCell;
+        if (puzzle.grid[row][col].isGiven) return;
+        const prev = puzzle.grid[row][col].playerValue;
+        const newGrid = puzzle.grid.map(r => r.map(c => ({ ...c, notes: new Set(c.notes) })));
+        newGrid[row][col].playerValue = 0;
+        set({
+          puzzle: { ...puzzle, grid: newGrid },
+          history: [...history, { row, col, prev }],
+        });
+      },
+
+      useHint: () => {
+        const { puzzle, hints, freeHintsRemaining, alienTokenBalance } = get();
+        if (!puzzle) return;
+
+        let cost = 0;
+        let newFreeHints = freeHintsRemaining;
+        let newBalance = alienTokenBalance;
+
+        if (freeHintsRemaining > 0) {
+          newFreeHints--;
+        } else {
+          cost = 10;
+          if (alienTokenBalance < cost) return;
+          newBalance -= cost;
+        }
+
+        const hint = getHint(puzzle);
+        if (!hint) return;
+        const newGrid = puzzle.grid.map(r => r.map(c => ({ ...c, notes: new Set(c.notes) })));
+        newGrid[hint.row][hint.col].playerValue = hint.value;
+        set({
+          puzzle: { ...puzzle, grid: newGrid },
+          hints: hints + 1,
+          freeHintsRemaining: newFreeHints,
+          alienTokenBalance: newBalance,
+          selectedCell: { row: hint.row, col: hint.col },
+        });
+      },
+
+      undo: () => {
+        const { puzzle, history } = get();
+        if (!puzzle || history.length === 0) return;
+        const last = history[history.length - 1];
+        const newGrid = puzzle.grid.map(r => r.map(c => ({ ...c, notes: new Set(c.notes) })));
+        newGrid[last.row][last.col].playerValue = last.prev;
+        set({
+          puzzle: { ...puzzle, grid: newGrid },
+          history: history.slice(0, -1),
+        });
+      },
+
+      tick: () => {
+        const { isTimerRunning, elapsed, puzzle } = get();
+        if (!isTimerRunning) return;
+        const newElapsed = elapsed + 1;
+        set({ elapsed: newElapsed });
+
+        if (puzzle && isSolved(puzzle)) {
+          get().finishGame();
+        }
+      },
+
+      finishGame: () => {
+        const { puzzle, elapsed, hints, errors } = get();
+        if (!puzzle) return;
+        const score = calculateScore(puzzle.size, elapsed, hints, errors);
+        set({ score, screen: 'victory', isTimerRunning: false });
+      },
+
+      nextLevel: () => {
+        const { level, gameNumber } = get();
+        const nextLvl = level < 3 ? level + 1 : 3;
+        set({ level: nextLvl, gameNumber: gameNumber + 1 });
+        get().startGame();
+      },
+
+      resetAll: () => set({
+        screen: 'splash', puzzle: null, selectedCell: null,
+        elapsed: 0, hints: 0, errors: 0, score: 0,
+        history: [], isTimerRunning: false,
+        level: 1, gameNumber: 1, freeHintsRemaining: 3,
+      }),
+
+      addTokens: (amount) => set(state => ({ alienTokenBalance: state.alienTokenBalance + amount })),
+    }),
+    {
+      name: 'congruence-storage',
+      partialize: (state) => ({
+        alienTokenBalance: state.alienTokenBalance,
+        level: state.level,
+        gameNumber: state.gameNumber
+      }),
     }
-  },
-
-  finishGame: () => {
-    const { puzzle, elapsed, hints, errors } = get();
-    if (!puzzle) return;
-    const score = calculateScore(puzzle.size, elapsed, hints, errors);
-    set({ score, screen: 'victory', isTimerRunning: false });
-  },
-
-  resetAll: () => set({
-    screen: 'splash', puzzle: null, selectedCell: null,
-    elapsed: 0, hints: 0, errors: 0, score: 0,
-    history: [], isTimerRunning: false,
-  }),
-}));
+  )
+);
