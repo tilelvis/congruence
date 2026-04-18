@@ -3,9 +3,11 @@
 
 import { useGameStore } from '@/store/gameStore';
 import { buzz } from '@/lib/alienClient';
+import { useAlien } from '@alien_org/react';
 
 export function NumberPad() {
   const { puzzle, enterNumber, clearCell, useHint, undo, freeHintsRemaining, alienTokenBalance } = useGameStore();
+  const { user } = useAlien();
 
   if (!puzzle) return null;
 
@@ -103,7 +105,11 @@ export function NumberPad() {
           onTouchStart={e => { if (isHintAffordable) e.currentTarget.style.transform = 'scale(0.9)'; }}
           // @ts-ignore
           onTouchEnd={e => { e.currentTarget.style.transform = 'scale(1)'; }}
-          onClick={() => { useHint(); buzz('medium'); }}
+          onClick={() => {
+            // @ts-ignore
+            useHint(user?.alienId || 'dummy-user-id');
+            buzz('medium');
+          }}
           disabled={!isHintAffordable}
           style={{
             ...ACT_BTN,

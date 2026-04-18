@@ -1,27 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Redis } from '@upstash/redis';
-
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+import { db } from '@/lib/db';
+import { leaderboard } from '@/lib/db/schema';
+import { desc, gte } from 'drizzle-orm';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const type = searchParams.get('type') ?? 'global';
-  const today = new Date().toISOString().split('T')[0];
-  const key = type === 'daily' ? `leaderboard:daily:${today}` : 'leaderboard:global';
 
-  // Get top 50 by score descending
-  const raw = await redis.zrange(key, 0, 49, { rev: true, withScores: true });
+  let query = db.select()
+    .from(leaderboard)
+    .orderBy(desc(leaderboard.score))
+    .limit(50);
 
-  const entries = [];
-  for (let i = 0; i < raw.length; i += 2) {
-    try {
-      const data = JSON.parse(raw[i] as string);
-      entries.push({ ...data, rank: entries.length + 1 });
-    } catch { /* skip malformed */ }
+  if (type === 'daily') {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    query = db.select()
+      .from(leaderboard)
+      .where(gte(leaderboard.createdAt, today))
+      .orderBy(desc(leaderboard.score))
+      .limit(50) as any;
   }
+
+  const rows = await query;
+  const entries = rows.map((row, index) => ({
+    ...row,
+    rank: index + 1
+  }));
 
   return NextResponse.json({ entries });
 }

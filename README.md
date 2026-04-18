@@ -7,7 +7,7 @@ Congruence is a modular arithmetic logic puzzle game built as a miniapp for the 
 ### 1. Prerequisites
 - Node.js 18+
 - npm or yarn
-- An Upstash Redis database
+- A Neon (Postgres) database
 
 ### 2. Installation
 ```bash
@@ -40,7 +40,7 @@ For detailed setup instructions, please refer to the following guides:
 - **Styling**: Tailwind CSS
 - **State Management**: Zustand
 - **Blockchain**: Solana (@solana/web3.js)
-- **Database**: Upstash Redis
+- **Database**: Neon (Postgres) with Drizzle ORM
 - **Platform**: Alien SDK
 
 ## 👽 Platform Integration
