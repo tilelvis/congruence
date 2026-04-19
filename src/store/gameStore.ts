@@ -3,7 +3,7 @@ import { generatePuzzle, type Puzzle } from '@/lib/puzzleGenerator';
 import { isSolved, getHint } from '@/lib/puzzleSolver';
 import { calculateScore } from '@/lib/scoreVerification';
 import { persist } from 'zustand/middleware';
-import { type AlienUser } from '@/hooks/use-alien-bridge';
+import { type AlienUser, type PaymentResult } from '@/hooks/use-alien-bridge';
 
 export type Screen = 'splash' | 'difficulty' | 'game' | 'victory' | 'leaderboard' | 'tutorial' | 'wallet';
 
@@ -42,14 +42,28 @@ interface GameState {
   selectCell: (row: number, col: number) => void;
   enterNumber: (num: number) => void;
   clearCell: () => void;
-  useHint: (alienId: string) => Promise<void>;
+  useHint: (alienId?: string) => Promise<void>;
   undo: () => void;
   tick: () => void;
   finishGame: () => void;
   nextLevel: () => void;
   resetAll: () => void;
   addTokens: (amount: number) => void;
-  setBridgeState: (state: Partial<Pick<GameState, 'alienUser' | 'isAlienApp' | 'bridgeReady' | 'bridgeError'>>) => void;
+
+  // Bridge actions
+  setBridgeState: (state: Partial<Pick<GameState, 
+    'alienUser' | 'isAlienApp' | 'bridgeReady' | 'bridgeError'
+  >>) => void;
+
+  // Real payment function from Alien bridge (overwritten by provider when ready)
+  pay: (params: {
+    invoice: string;
+    recipient?: string;
+    amount: string;
+    token?: string;
+    network?: string;
+    memo?: string;
+  }) => Promise<PaymentResult>;
 }
 
 export const useGameStore = create<GameState>()(
@@ -84,9 +98,15 @@ export const useGameStore = create<GameState>()(
 
         const puzzle = generatePuzzle(effectiveSize, effectiveDiff);
         set({
-          puzzle, screen: 'game',
-          selectedCell: null, elapsed: 0, hints: 0,
-          errors: 0, score: 0, history: [], isTimerRunning: true,
+          puzzle,
+          screen: 'game',
+          selectedCell: null,
+          elapsed: 0,
+          hints: 0,
+          errors: 0,
+          score: 0,
+          history: [],
+          isTimerRunning: true,
           freeHintsRemaining: 3,
         });
       },
@@ -136,7 +156,7 @@ export const useGameStore = create<GameState>()(
         });
       },
 
-      useHint: async (alienId: string) => {
+      useHint: async (alienId) => {
         const { puzzle, hints, freeHintsRemaining, alienTokenBalance } = get();
         if (!puzzle) return;
 
@@ -145,13 +165,13 @@ export const useGameStore = create<GameState>()(
 
         if (freeHintsRemaining > 0) {
           newFreeHints--;
-        } else {
+        } else if (alienId) {
           // Gated by server-side token deduction
           try {
             const res = await fetch('/api/game/use-hint', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ alienId })
+              body: JSON.stringify({ alienId }),
             });
             const data = await res.json();
             if (!res.ok) {
@@ -167,8 +187,10 @@ export const useGameStore = create<GameState>()(
 
         const hint = getHint(puzzle);
         if (!hint) return;
+
         const newGrid = puzzle.grid.map(r => r.map(c => ({ ...c, notes: new Set(c.notes) })));
         newGrid[hint.row][hint.col].playerValue = hint.value;
+
         set({
           puzzle: { ...puzzle, grid: newGrid },
           hints: hints + 1,
@@ -216,22 +238,42 @@ export const useGameStore = create<GameState>()(
       },
 
       resetAll: () => set({
-        screen: 'splash', puzzle: null, selectedCell: null,
-        elapsed: 0, hints: 0, errors: 0, score: 0,
-        history: [], isTimerRunning: false,
-        level: 1, gameNumber: 1, freeHintsRemaining: 3,
+        screen: 'splash',
+        puzzle: null,
+        selectedCell: null,
+        elapsed: 0,
+        hints: 0,
+        errors: 0,
+        score: 0,
+        history: [],
+        isTimerRunning: false,
+        level: 1,
+        gameNumber: 1,
+        freeHintsRemaining: 3,
       }),
 
-      addTokens: (amount) => set(state => ({ alienTokenBalance: state.alienTokenBalance + amount })),
+      addTokens: (amount) => set(state => ({
+        alienTokenBalance: state.alienTokenBalance + amount
+      })),
 
+      // Bridge state updater
       setBridgeState: (bridgeState) => set((state) => ({ ...state, ...bridgeState })),
+
+      // Payment action — will be replaced by the real bridge pay() from AlienMiniAppProvider
+      pay: async (params) => {
+        console.warn('[GameStore] pay() called before Alien bridge is ready');
+        return {
+          status: 'failed' as const,
+          invoice: params.invoice,
+        };
+      },
     }),
     {
       name: 'congruence-storage',
       partialize: (state) => ({
         alienTokenBalance: state.alienTokenBalance,
         level: state.level,
-        gameNumber: state.gameNumber
+        gameNumber: state.gameNumber,
       }),
     }
   )
