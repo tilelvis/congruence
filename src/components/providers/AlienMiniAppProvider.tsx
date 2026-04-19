@@ -8,7 +8,7 @@ export function AlienMiniAppProvider({ children }: { children: React.ReactNode }
   const { user, ready, isAlienApp, error, pay } = useAlienBridge();
   const setBridgeState = useGameStore((state) => state.setBridgeState);
 
-  // Sync bridge state into Zustand
+  // Sync Alien Bridge state (user, ready, error, etc.) into Zustand store
   useEffect(() => {
     setBridgeState({
       alienUser: user,
@@ -18,32 +18,15 @@ export function AlienMiniAppProvider({ children }: { children: React.ReactNode }
     });
   }, [user, ready, isAlienApp, error, setBridgeState]);
 
-  // Expose the real bridge pay() to the store once ready
-  // We wrap it to handle the recipient difference safely
+  // Inject the real pay() function from the bridge into the store once ready
   useEffect(() => {
     if (ready && typeof pay === 'function') {
-      const wrappedPay = async (params: {
-        invoice: string;
-        recipient?: string;
-        amount: string;
-        token?: string;
-        network?: string;
-        memo?: string;
-      }) => {
-        // Ensure recipient is always a string for the bridge
-        const bridgeParams = {
-          ...params,
-          recipient: params.recipient ?? '', // fallback to empty string if undefined
-        };
-
-        return pay(bridgeParams);
-      };
-
-      useGameStore.setState({ pay: wrappedPay });
-      console.log('[AlienMiniAppProvider] Real pay function (wrapped) injected into store');
+      useGameStore.setState({ pay });
+      console.log('[AlienMiniAppProvider] ✅ Real Alien pay function injected into store');
     }
   }, [ready, pay]);
 
+  // Loading screen while connecting to Alien Bridge
   if (!ready) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#050d18] text-white">
@@ -54,6 +37,7 @@ export function AlienMiniAppProvider({ children }: { children: React.ReactNode }
     );
   }
 
+  // Optional: log errors when running inside Alien app
   if (error && isAlienApp) {
     console.error('[AlienMiniAppProvider] Bridge error:', error);
   }
