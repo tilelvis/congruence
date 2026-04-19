@@ -1,47 +1,47 @@
 // ── Product catalog (server-side source of truth) ──────────────
-// amount is in ALIEN's smallest unit (9 decimals)
+// amount is in ALN's smallest unit (integer)
 export const DEPOSIT_PACKS = [
   {
-    id: 'alien-10',
-    amount: '10000000000', // 10 ALIEN (9 decimals)
+    id: 'aln-10',
+    amount: '10', // 10 ALN
     displayAmount: '10',
-    token: 'ALIEN',
+    token: 'ALN',
     network: 'alien',
-    recipientAddress: process.env.NEXT_PUBLIC_ALIEN_RECIPIENT_ADDRESS!,
-    label: '10 ALIEN',
+    recipientAddress: process.env.NEXT_PUBLIC_ALN_RECIPIENT_ADDRESS!,
+    label: '10 ALN',
     trials: 10,
     bonus: '',
   },
   {
-    id: 'alien-25',
-    amount: '25000000000', // 25 ALIEN
+    id: 'aln-25',
+    amount: '25', // 25 ALN
     displayAmount: '25',
-    token: 'ALIEN',
+    token: 'ALN',
     network: 'alien',
-    recipientAddress: process.env.NEXT_PUBLIC_ALIEN_RECIPIENT_ADDRESS!,
-    label: '25 ALIEN',
+    recipientAddress: process.env.NEXT_PUBLIC_ALN_RECIPIENT_ADDRESS!,
+    label: '25 ALN',
     trials: 27,
     bonus: '+8%',
   },
   {
-    id: 'alien-50',
-    amount: '50000000000', // 50 ALIEN
+    id: 'aln-50',
+    amount: '50', // 50 ALN
     displayAmount: '50',
-    token: 'ALIEN',
+    token: 'ALN',
     network: 'alien',
-    recipientAddress: process.env.NEXT_PUBLIC_ALIEN_RECIPIENT_ADDRESS!,
-    label: '50 ALIEN',
+    recipientAddress: process.env.NEXT_PUBLIC_ALN_RECIPIENT_ADDRESS!,
+    label: '50 ALN',
     trials: 60,
     bonus: '+20%',
   },
   {
-    id: 'alien-100',
-    amount: '100000000000', // 100 ALIEN
+    id: 'aln-100',
+    amount: '100', // 100 ALN
     displayAmount: '100',
-    token: 'ALIEN',
+    token: 'ALN',
     network: 'alien',
-    recipientAddress: process.env.NEXT_PUBLIC_ALIEN_RECIPIENT_ADDRESS!,
-    label: '100 ALIEN',
+    recipientAddress: process.env.NEXT_PUBLIC_ALN_RECIPIENT_ADDRESS!,
+    label: '100 ALN',
     trials: 130,
     bonus: '+30%',
   },

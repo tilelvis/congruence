@@ -14,9 +14,9 @@ Click on **"Create New Miniapp"** and fill in the details:
 
 ## 3. Obtain Credentials
 Once created, the dashboard will provide:
-- **App ID**: Copy to `ALIEN_APP_ID`.
-- **App Secret**: Copy to `ALIEN_APP_SECRET`.
-- `Webhook Secret`: Copy to `ALIEN_WEBHOOK_SECRET`.
+- **App ID**: Copy to `ALN_APP_ID`.
+- **App Secret**: Copy to `ALN_APP_SECRET`.
+- `Webhook Secret`: Copy to `ALN_WEBHOOK_SECRET`.
 
 Ensure these are added to your Vercel environment variables.
 

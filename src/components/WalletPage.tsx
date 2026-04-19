@@ -148,11 +148,11 @@ export function WalletPage({ onBack }: Props) {
     if (!authToken) return;
     const amount = parseInt(withdrawAmount, 10);
     if (isNaN(amount) || amount < 5) {
-      setStatusMsg({ text: 'Minimum withdrawal is 5 ALIEN.', isError: true });
+      setStatusMsg({ text: 'Minimum withdrawal is 5 ALN.', isError: true });
       return;
     }
     if (!wallet || amount > wallet.balance) {
-      setStatusMsg({ text: `Insufficient balance. You have ${wallet?.balance ?? 0} ALIEN.`, isError: true });
+      setStatusMsg({ text: `Insufficient balance. You have ${wallet?.balance ?? 0} ALN.`, isError: true });
       return;
     }
     setStatusMsg({ text: 'Submitting withdrawal request...', isError: false });
@@ -259,7 +259,7 @@ export function WalletPage({ onBack }: Props) {
               {wallet?.balance ?? 0}
             </div>
             <div style={{ color: 'rgba(0,255,136,0.6)', fontSize: 14, fontFamily: 'var(--font-orbitron)', marginTop: 4 }}>
-              ALIEN TOKENS
+              ALN TOKENS
             </div>
           </>
         )}
@@ -300,7 +300,7 @@ export function WalletPage({ onBack }: Props) {
         {tab === 'deposit' && (
           <>
             <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginBottom: 14, lineHeight: 1.6 }}>
-              Deposit ALIEN tokens once. 1 ALIEN = 1 puzzle trial.
+              Deposit ALN tokens once. 1 ALN = 1 puzzle trial.
               Larger packs include bonus trials.
             </p>
             {!payment.supported && (
@@ -350,8 +350,8 @@ export function WalletPage({ onBack }: Props) {
         {tab === 'withdraw' && (
           <>
             <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginBottom: 16, lineHeight: 1.6 }}>
-              Withdraw your ALIEN tokens back to your Alien app wallet.
-              Minimum 5 ALIEN. Processed within 24 hours.
+              Withdraw your ALN tokens back to your Alien app wallet.
+              Minimum 5 ALN. Processed within 24 hours.
             </p>
             <input
               type="number"
@@ -370,7 +370,7 @@ export function WalletPage({ onBack }: Props) {
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
               <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
-                Available: {wallet?.balance ?? 0} ALIEN
+                Available: {wallet?.balance ?? 0} ALN
               </span>
               <button
                 onClick={() => setWithdrawAmount(String(wallet?.balance ?? 0))}
@@ -389,7 +389,7 @@ export function WalletPage({ onBack }: Props) {
                 color: '#020408', border: 'none', cursor: 'pointer',
               }}
             >
-              ↑ WITHDRAW TO ALIEN WALLET
+              ↑ WITHDRAW TO ALN WALLET
             </button>
           </>
         )}

@@ -1,12 +1,12 @@
 export const dynamic = "force-dynamic";
-// Called server-side when a user starts a puzzle (spends 1 ALIEN from game wallet)
+// Called server-side when a user starts a puzzle (spends 1 ALN from game wallet)
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyRequest } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { gameWallets, walletLedger } from '@/lib/db/schema';
 import { eq, sql } from 'drizzle-orm';
 
-const TRIAL_COST = 1; // 1 ALIEN per trial
+const TRIAL_COST = 1; // 1 ALN per trial
 
 export async function POST(request: NextRequest) {
   const auth = await verifyRequest(request);

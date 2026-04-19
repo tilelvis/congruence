@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyRequest } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { gameWallets, walletLedger } from '@/lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, notInArray, sql, and, or, isNull } from 'drizzle-orm';
+import { BLACKLISTED_INVOICES } from '@/lib/constants/blacklistedInvoices';
 
 // GET /api/wallet — fetch balance + ledger
 export async function GET(request: NextRequest) {
@@ -21,7 +22,15 @@ export async function GET(request: NextRequest) {
   }
 
   const ledger = await db.select().from(walletLedger)
-    .where(eq(walletLedger.alienId, auth.alienId))
+    .where(
+      and(
+        eq(walletLedger.alienId, auth.alienId),
+        or(
+          isNull(walletLedger.invoice),
+          notInArray(walletLedger.invoice, BLACKLISTED_INVOICES)
+        )
+      )
+    )
     .orderBy(desc(walletLedger.createdAt))
     .limit(20);
 
