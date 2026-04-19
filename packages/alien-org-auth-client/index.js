@@ -1,8 +1,13 @@
-module.exports = {
-  createAuthClient: () => ({
-    verifyToken: async (token) => ({ sub: "dummy-alien-id" })
-  }),
-  JwtErrors: {
-    JWTExpired: class extends Error {}
-  }
+export const JwtErrors = {
+  JWTExpired: class extends Error {},
+  JOSEError: class extends Error {},
 };
+
+export function createAuthClient(options) {
+  return {
+    verifyToken: async (token) => ({
+      sub: 'dummy-id',
+      username: 'dummy-user'
+    })
+  };
+}

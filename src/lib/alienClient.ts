@@ -1,6 +1,6 @@
 'use client';
 
-import { useAlien } from '@alien_org/react';
+import { useAlien } from '@alien-id/miniapps-react';
 
 export function isAlienApp(): boolean {
   if (typeof window === 'undefined') return false;

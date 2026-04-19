@@ -1,9 +1,17 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Orbitron, Exo_2 } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const orbitron = Orbitron({
+  subsets: ['latin'],
+  variable: '--font-orbitron',
+});
+
+const exo2 = Exo_2({
+  subsets: ['latin'],
+  variable: '--font-exo2',
+});
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -29,7 +37,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="h-full overflow-hidden">
-      <body className={`${inter.variable} h-full overflow-hidden bg-space-950 text-white`}>
+      <body className={`${orbitron.variable} ${exo2.variable} font-sans h-full overflow-hidden bg-space-950 text-white`}>
         <Providers>
           {children}
         </Providers>

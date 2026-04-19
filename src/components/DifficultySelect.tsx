@@ -2,7 +2,7 @@
 
 import { useGameStore } from '@/store/gameStore';
 import { buzz } from '@/lib/alienClient';
-import { useAlien } from '@alien_org/react';
+import { useAlien } from '@alien-id/miniapps-react';
 
 const DIFFICULTIES = [
   { id: 'novice', label: 'Cadet',   desc: '5×5 · Easy warmup',       icon: '🌱', size: 5, color: 'from-emerald-600 to-teal-600' },
