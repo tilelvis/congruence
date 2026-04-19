@@ -1,6 +1,17 @@
 'use client';
 
-import { useAlien } from '@alien-id/miniapps-react';
+import { useAlienBridge } from '@/hooks/use-alien-bridge';
+
+// Re-export hook for convenience and to minimize changes in other files
+export function useAlien() {
+  const { user, isAlienApp, error } = useAlienBridge();
+  return {
+    user: user ? { alienId: user.alienId, username: user.callSign ?? 'Unknown' } : null,
+    authToken: user?.token ?? null,
+    isBridgeAvailable: isAlienApp,
+    error
+  };
+}
 
 export function isAlienApp(): boolean {
   if (typeof window === 'undefined') return false;
@@ -14,10 +25,17 @@ export function isAlienApp(): boolean {
 type HapticType = 'light' | 'medium' | 'heavy' | 'success' | 'error';
 
 export function buzz(type: HapticType = 'light') {
-  // @ts-ignore
-  if (typeof window !== 'undefined' && window.AlienBridge && window.AlienBridge.hapticFeedback) {
-    // @ts-ignore
-    window.AlienBridge.hapticFeedback(type);
+  if (typeof window !== 'undefined') {
+    const bridge = (window as any).alien;
+    try {
+      if (bridge?.haptics?.vibrate) {
+        bridge.haptics.vibrate(type);
+      } else if (bridge?.hapticFeedback) {
+        bridge.hapticFeedback(type);
+      }
+    } catch (e) {
+      console.warn('[AlienBridge] buzz failed', e);
+    }
   }
 
   if (typeof navigator !== 'undefined' && navigator.vibrate) {
@@ -43,4 +61,3 @@ export function shareScore(score: number, difficulty: string, size: number) {
   }
 }
 
-export { useAlien };

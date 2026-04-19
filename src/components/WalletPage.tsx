@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useAlien, usePayment } from '@alien-id/miniapps-react';
+import { useAlienBridge } from '@/hooks/use-alien-bridge';
 import { DEPOSIT_PACKS, type DepositPack } from '@/lib/constants/depositPacks';
 
 interface WalletData {
@@ -24,39 +24,17 @@ interface Props {
 }
 
 export function WalletPage({ onBack }: Props) {
-  const { authToken, isBridgeAvailable } = useAlien();
+  const { user, isAlienApp, pay, haptic } = useAlienBridge();
+  const authToken = user?.token;
+
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
   const [tab, setTab] = useState<'deposit' | 'history' | 'withdraw'>('deposit');
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [statusMsg, setStatusMsg] = useState<{ text: string; isError: boolean } | null>(null);
   const [isLoadingWallet, setIsLoadingWallet] = useState(true);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const isFetching = useRef(false);
-
-  // ── usePayment must be called at component level, not inside handlers ──
-  const payment = usePayment({
-    onPaid: (txHash: string) => {
-      setStatusMsg({ text: '✅ Payment confirmed! Balance will update shortly.', isError: false });
-      // Webhook will credit balance. Poll for 10s to pick up the update.
-      let attempts = 0;
-      const poll = setInterval(() => {
-        attempts++;
-        fetchWallet();
-        if (attempts >= 5) clearInterval(poll);
-      }, 2000);
-    },
-    onCancelled: () => {
-      setStatusMsg({ text: 'Payment cancelled.', isError: false });
-      payment.reset();
-    },
-    onFailed: (errorCode?: string) => {
-      setStatusMsg({
-        text: `Payment failed: ${errorCode ?? 'unknown error'}`,
-        isError: true,
-      });
-      payment.reset();
-    },
-  });
 
   const fetchWallet = useCallback(async () => {
     if (!authToken || isFetching.current) return;
@@ -83,24 +61,20 @@ export function WalletPage({ onBack }: Props) {
   // ── DEPOSIT HANDLER ────────────────────────────────────────────
   async function handleDeposit(pack: DepositPack) {
     // Guard 1: must be in Alien app
-    if (!isBridgeAvailable) {
+    if (!isAlienApp) {
       setStatusMsg({ text: 'Open this app inside the Alien app to make payments.', isError: true });
       return;
     }
-    // Guard 2: payments must be supported by this host version
-    if (!payment.supported) {
-      setStatusMsg({ text: 'Payments are not supported in this version of the Alien app. Please update.', isError: true });
-      return;
-    }
-    // Guard 3: must have auth token
+    // Guard 2: must have auth token
     if (!authToken) {
       setStatusMsg({ text: 'Not authenticated. Please restart the app.', isError: true });
       return;
     }
-    // Guard 4: prevent double-tap
-    if (payment.isLoading) return;
+    // Guard 3: prevent double-tap
+    if (isProcessingPayment) return;
 
     setStatusMsg(null);
+    setIsProcessingPayment(true);
     try {
       // Step 1: Create invoice on YOUR backend.
       const res = await fetch('/api/invoices', {
@@ -118,28 +92,41 @@ export function WalletPage({ onBack }: Props) {
           text: `Failed to create invoice: ${err.error ?? res.status}`,
           isError: true,
         });
+        setIsProcessingPayment(false);
         return;
       }
 
       const { invoice } = await res.json();
 
       // Step 2: Open the Alien native payment approval UI.
-      await payment.pay({
+      const result = await pay({
         recipient: pack.recipientAddress,
         amount: pack.amount,
         token: pack.token,
         network: pack.network,
         invoice,
-        item: {
-          title: `Congruence — ${pack.trials} Trials`,
-          iconUrl: `${process.env.NEXT_PUBLIC_APP_URL}/icon.png`,
-          quantity: 1,
-        },
+        memo: `Congruence — ${pack.trials} Trials`,
       });
+
+      if (result.status === 'paid') {
+        setStatusMsg({ text: '✅ Payment confirmed! Balance will update shortly.', isError: false });
+        // Webhook will credit balance. Poll for 10s to pick up the update.
+        let attempts = 0;
+        const poll = setInterval(() => {
+          attempts++;
+          fetchWallet();
+          if (attempts >= 5) clearInterval(poll);
+        }, 2000);
+      } else if (result.status === 'cancelled') {
+        setStatusMsg({ text: 'Payment cancelled.', isError: false });
+      } else {
+        setStatusMsg({ text: 'Payment failed. Please try again.', isError: true });
+      }
     } catch (err) {
       console.error('Deposit error:', err);
       setStatusMsg({ text: 'An unexpected error occurred. Try again.', isError: true });
-      payment.reset();
+    } finally {
+      setIsProcessingPayment(false);
     }
   }
 
@@ -224,7 +211,7 @@ export function WalletPage({ onBack }: Props) {
     }),
   };
 
-  if (!isBridgeAvailable) {
+  if (!isAlienApp) {
     return (
       <div style={{ ...S.page, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 }}>
         <div style={{ fontSize: 48 }}>🛸</div>
@@ -303,24 +290,19 @@ export function WalletPage({ onBack }: Props) {
               Deposit ALN tokens once. 1 ALN = 1 puzzle trial.
               Larger packs include bonus trials.
             </p>
-            {!payment.supported && (
-              <div style={S.status(true)}>
-                ⚠️ Payments not supported. Make sure you're using the latest Alien app.
-              </div>
-            )}
             <div style={S.packGrid}>
               {DEPOSIT_PACKS.map((pack, i) => (
                 <button
                   key={pack.id}
                   onClick={() => handleDeposit(pack)}
-                  disabled={payment.isLoading || !payment.supported}
+                  disabled={isProcessingPayment}
                   style={{
                     padding: '16px 12px', borderRadius: 14,
                     background: i === 2 ? 'rgba(0,255,136,0.07)' : 'rgba(10,22,40,0.9)',
                     border: `1.5px solid ${i === 2 ? 'rgba(0,255,136,0.35)' : 'rgba(255,255,255,0.08)'}`,
-                    cursor: payment.isLoading || !payment.supported ? 'not-allowed' : 'pointer',
+                    cursor: isProcessingPayment ? 'not-allowed' : 'pointer',
                     textAlign: 'center', transition: 'all 0.1s',
-                    opacity: payment.isLoading && !payment.supported ? 0.4 : 1,
+                    opacity: isProcessingPayment ? 0.4 : 1,
                   }}
                 >
                   <div style={{ fontFamily: 'var(--font-orbitron)', fontSize: 17, fontWeight: 900, color: '#f59e0b' }}>
@@ -337,7 +319,7 @@ export function WalletPage({ onBack }: Props) {
                 </button>
               ))}
             </div>
-            {payment.isLoading && (
+            {isProcessingPayment && (
               <div style={{ textAlign: 'center', marginTop: 20 }}>
                 <div style={{ width: 28, height: 28, border: '2px solid #06b6d4', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 10px' }} />
                 <p style={{ color: '#06b6d4', fontSize: 13, fontFamily: 'var(--font-orbitron)', letterSpacing: '0.05em' }}>
