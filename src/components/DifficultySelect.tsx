@@ -21,7 +21,7 @@ export function DifficultySelect() {
     if (!authToken) return;
     buzz('medium');
 
-    // Spend 1 ALIEN from game wallet
+    // Spend 1 ALN from game wallet
     const res = await fetch('/api/wallet/spend', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },

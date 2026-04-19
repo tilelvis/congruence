@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     if (wallets.length === 0 || wallets[0].balance < 10) {
       return NextResponse.json({
         success: false,
-        error: "Insufficient ALIEN tokens. 10 ALIEN required per hint."
+        error: "Insufficient ALN tokens. 10 ALN required per hint."
       }, { status: 403 });
     }
 
