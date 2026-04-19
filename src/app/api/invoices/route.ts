@@ -21,8 +21,8 @@ export async function POST(request: NextRequest) {
 
   // 2. Find product in SERVER-SIDE catalog (never trust client amounts)
   const product = DEPOSIT_PACKS.find(p => p.id === productId);
-  if (!product) {
-    return NextResponse.json({ error: 'Unknown product' }, { status: 400 });
+  if (!product || !product.recipientAddress) {
+    return NextResponse.json({ error: 'Unknown product or missing recipient address' }, { status: 400 });
   }
 
   // 3. Create invoice — plain UUID, 36 chars, well under 64-byte limit

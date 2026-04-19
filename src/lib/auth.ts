@@ -1,9 +1,9 @@
 import { createAuthClient, JwtErrors } from '@alien_org/auth-client';
 import { NextRequest, NextResponse } from 'next/server';
 
-// audience = your NEXT_PUBLIC_ALIEN_RECIPIENT_ADDRESS (your provider address)
+// audience = your NEXT_PUBLIC_ALN_RECIPIENT_ADDRESS (your provider address)
 const authClient = createAuthClient({
-  audience: process.env.NEXT_PUBLIC_ALIEN_RECIPIENT_ADDRESS!,
+  audience: process.env.NEXT_PUBLIC_ALN_RECIPIENT_ADDRESS!,
 });
 
 export async function verifyRequest(
