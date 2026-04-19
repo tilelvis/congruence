@@ -37,4 +37,19 @@ export function AlienMiniAppProvider({ children }: { children: React.ReactNode }
     }
   }, [ready, pay]);
 
-  if
+  if (!ready) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#050d18] text-white">
+        <div className="text-6xl mb-6 animate-pulse">🛸</div>
+        <h1 className="text-3xl font-bold tracking-[0.125em] mb-3">CONGRUENCE</h1>
+        <p className="text-sm text-gray-400">Connecting to Alien Bridge...</p>
+      </div>
+    );
+  }
+
+  if (error && isAlienApp) {
+    console.error('[AlienProvider] Bridge error:', error);
+  }
+
+  return <>{children}</>;
+}
