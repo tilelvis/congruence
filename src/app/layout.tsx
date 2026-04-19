@@ -3,6 +3,7 @@ import { Orbitron, Exo_2 } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import { BridgeGuard } from '@/components/BridgeGuard';
+import { AlienMiniAppProvider } from '@/components/providers/AlienMiniAppProvider';
 
 const orbitron = Orbitron({
   subsets: ['latin'],
@@ -40,9 +41,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className="h-full overflow-hidden">
       <body className={`${orbitron.variable} ${exo2.variable} font-sans h-full overflow-hidden bg-space-950 text-white`}>
         <Providers>
-          <BridgeGuard>
-            {children}
-          </BridgeGuard>
+          <AlienMiniAppProvider>
+            <BridgeGuard>
+              {children}
+            </BridgeGuard>
+          </AlienMiniAppProvider>
         </Providers>
       </body>
     </html>

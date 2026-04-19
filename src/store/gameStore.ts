@@ -3,6 +3,7 @@ import { generatePuzzle, type Puzzle } from '@/lib/puzzleGenerator';
 import { isSolved, getHint } from '@/lib/puzzleSolver';
 import { calculateScore } from '@/lib/scoreVerification';
 import { persist } from 'zustand/middleware';
+import { type AlienUser } from '@/hooks/use-alien-bridge';
 
 export type Screen = 'splash' | 'difficulty' | 'game' | 'victory' | 'leaderboard' | 'tutorial' | 'wallet';
 
@@ -29,6 +30,12 @@ interface GameState {
   level: number;
   gameNumber: number;
 
+  // Alien Bridge State
+  alienUser: AlienUser | null;
+  isAlienApp: boolean;
+  bridgeReady: boolean;
+  bridgeError: string | null;
+
   // Actions
   goTo: (screen: Screen) => void;
   startGame: (size?: number, difficulty?: string) => void;
@@ -42,6 +49,7 @@ interface GameState {
   nextLevel: () => void;
   resetAll: () => void;
   addTokens: (amount: number) => void;
+  setBridgeState: (state: Partial<Pick<GameState, 'alienUser' | 'isAlienApp' | 'bridgeReady' | 'bridgeError'>>) => void;
 }
 
 export const useGameStore = create<GameState>()(
@@ -61,6 +69,11 @@ export const useGameStore = create<GameState>()(
       alienTokenBalance: 100, // Starting balance
       level: 1,
       gameNumber: 1,
+
+      alienUser: null,
+      isAlienApp: false,
+      bridgeReady: false,
+      bridgeError: null,
 
       goTo: (screen) => set({ screen }),
 
@@ -210,6 +223,8 @@ export const useGameStore = create<GameState>()(
       }),
 
       addTokens: (amount) => set(state => ({ alienTokenBalance: state.alienTokenBalance + amount })),
+
+      setBridgeState: (bridgeState) => set((state) => ({ ...state, ...bridgeState })),
     }),
     {
       name: 'congruence-storage',

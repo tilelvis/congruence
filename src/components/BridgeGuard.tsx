@@ -1,11 +1,11 @@
 'use client';
 
-import { useAlien } from '@alien-id/miniapps-react';
+import { useGameStore } from '@/store/gameStore';
 
 export function BridgeGuard({ children }: { children: React.ReactNode }) {
-  const { isBridgeAvailable } = useAlien();
+  const isAlienApp = useGameStore((state) => state.isAlienApp);
 
-  if (!isBridgeAvailable) {
+  if (!isAlienApp) {
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-space-950 p-6 text-center">
         <div className="max-w-xs space-y-6">
