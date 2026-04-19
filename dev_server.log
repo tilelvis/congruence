@@ -1,0 +1,12 @@
+
+> temp_scaffold@0.1.0 dev
+> next dev
+
+ ⚠ Port 3000 is in use by an unknown process, using available port 3009 instead.
+   ▲ Next.js 15.5.15
+   - Local:        http://localhost:3009
+   - Network:      http://192.168.0.2:3009
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 2.4s

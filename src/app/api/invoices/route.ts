@@ -1,4 +1,3 @@
-export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { verifyRequest } from '@/lib/auth';
@@ -7,33 +6,47 @@ import { paymentIntents } from '@/lib/db/schema';
 import { DEPOSIT_PACKS } from '@/lib/constants/depositPacks';
 
 export async function POST(request: NextRequest) {
+  // 1. Verify auth token
   const auth = await verifyRequest(request);
   if (auth instanceof NextResponse) return auth;
 
-  const body = await request.json();
-  const { productId, amount, token, network } = body;
-
-  // Validate the product exists
-  const pack = DEPOSIT_PACKS.find(p => p.id === productId);
-  if (!pack && productId !== 'custom') {
-    return NextResponse.json({ error: 'Invalid product' }, { status: 400 });
+  let body: { productId: string };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  const invoice = `inv-${randomUUID()}`;
-  const recipientAddress = network === 'alien'
-    ? process.env.NEXT_PUBLIC_ALIEN_RECIPIENT_ADDRESS!
-    : process.env.NEXT_PUBLIC_RECIPIENT_ADDRESS!;
+  const { productId } = body;
 
-  await db.insert(paymentIntents).values({
-    invoice,
-    senderAlienId: auth.alienId,
-    recipientAddress,
-    amount: amount ?? pack?.amount ?? '10',
-    token: token ?? 'ALIEN',
-    network: network ?? 'alien',
-    productId,
-    status: 'pending',
-  });
+  // 2. Find product in SERVER-SIDE catalog (never trust client amounts)
+  const product = DEPOSIT_PACKS.find(p => p.id === productId);
+  if (!product) {
+    return NextResponse.json({ error: 'Unknown product' }, { status: 400 });
+  }
+
+  // 3. Create invoice — plain UUID, 36 chars, well under 64-byte limit
+  const invoice = randomUUID();
+
+  // 4. Save payment intent
+  try {
+    await db.insert(paymentIntents).values({
+      invoice,
+      senderAlienId: auth.alienId,
+      recipientAddress: product.recipientAddress,
+      amount: product.amount,
+      token: product.token,
+      network: product.network,
+      productId: product.id,
+      status: 'pending',
+    });
+  } catch (err) {
+    console.error('Failed to create payment intent:', err);
+    return NextResponse.json(
+      { error: 'Failed to create invoice' },
+      { status: 500 },
+    );
+  }
 
   return NextResponse.json({ invoice });
 }

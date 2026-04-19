@@ -3,7 +3,7 @@
 import { useGameStore } from '@/store/gameStore';
 import { cn } from '@/lib/utils';
 import { buzz } from '@/lib/alienClient';
-import { useAlien } from '@alien_org/react';
+import { useAlien } from '@alien-id/miniapps-react';
 
 export function NumberPad() {
   const { puzzle, enterNumber, clearCell, useHint, undo, freeHintsRemaining, alienTokenBalance } = useGameStore();

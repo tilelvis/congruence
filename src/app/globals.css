@@ -23,6 +23,8 @@
   --color-cage-6: #0891B2;
   --color-cage-7: #EA580C;
 
+  --font-sans: var(--font-exo2), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-orbitron), sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -52,6 +54,9 @@
   html, body {
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-orbitron);
   }
 }
 
