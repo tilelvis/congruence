@@ -7,17 +7,9 @@ import { GameHUD } from './GameHUD';
 
 export function GameBoard() {
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div className="flex-1 flex flex-col overflow-hidden">
       <GameHUD />
-      {/* CRITICAL: flex-1 + align/justify center to prevent floating top */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 8,
-        overflow: 'hidden',
-      }}>
+      <div className="flex-1 flex items-center justify-center p-2 overflow-hidden">
         <GameGrid />
       </div>
       <NumberPad />

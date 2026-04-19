@@ -8,147 +8,71 @@ export function SplashScreen() {
   const { user } = useAlien();
 
   return (
-    <div style={{
-      flex: 1,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '40px 24px',
-    }}>
-      {/* Logo area */}
-      <div style={{ textAlign: 'center' }}>
-        <div className="animate-float" style={{ fontSize: 72, lineHeight: 1, marginBottom: 16 }}>
-          👾
-        </div>
-        <h1
-          className="glow-green"
-          style={{
-            fontFamily: 'var(--font-orbitron), monospace',
-            fontSize: 'clamp(28px, 9vw, 40px)',
-            fontWeight: 900,
-            letterSpacing: '0.08em',
-            color: '#00ff88',
-            margin: 0,
-            textTransform: 'uppercase',
-          }}
-        >
+    <div className="flex-1 flex flex-col items-center justify-between py-10 px-4">
+      {/* Header */}
+      <div className="text-center">
+        <div className="text-6xl mb-3 animate-float">👾</div>
+        <h1 className="text-4xl font-black tracking-tighter text-transparent bg-clip-text
+          bg-gradient-to-b from-alien-green to-alien-cyan animate-glow">
           CONGRUENCE
         </h1>
-        <p style={{
-          color: 'rgba(0,255,136,0.5)',
-          fontSize: 11,
-          letterSpacing: '0.3em',
-          textTransform: 'uppercase',
-          marginTop: 8,
-          fontFamily: 'var(--font-orbitron)',
-        }}>
-          Modular Arithmetic · Deep Space
+        <p className="text-slate-400 text-xs mt-2 tracking-widest uppercase">
+          Modular Arithmetic · Deep Space Edition
         </p>
         {user && (
-          <p style={{
-            color: 'rgba(6,182,212,0.7)',
-            fontSize: 12,
-            fontFamily: 'var(--font-orbitron)',
-            marginTop: 12,
-            letterSpacing: '0.1em',
-          }}>
-            ▸ {user.username ?? user.alienId?.slice(0, 12) + '…'}
+          <p className="text-alien-green/70 text-xs mt-3 font-mono">
+            ▸ {user.username ?? user.alienId.slice(0, 12) + '…'}
           </p>
         )}
       </div>
 
-      {/* Buttons */}
-      <div style={{ width: '100%', maxWidth: 320, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* Main actions */}
+      <div className="w-full max-w-xs space-y-3">
         <button
           onClick={() => goTo('difficulty')}
-          style={{
-            width: '100%',
-            padding: '18px 0',
-            borderRadius: 16,
-            fontFamily: 'var(--font-orbitron)',
-            fontWeight: 700,
-            fontSize: 16,
-            letterSpacing: '0.1em',
-            background: 'linear-gradient(135deg, #00ff88, #06b6d4)',
-            color: '#020408',
-            border: 'none',
-            cursor: 'pointer',
-            boxShadow: '0 0 30px rgba(0,255,136,0.4), 0 4px 20px rgba(0,0,0,0.5)',
-            transition: 'transform 0.1s, box-shadow 0.1s',
-          }}
-          // @ts-ignore
-          onTouchStart={e => (e.currentTarget.style.transform = 'scale(0.96)')}
-          // @ts-ignore
-          onTouchEnd={e => (e.currentTarget.style.transform = 'scale(1)')}
+          className="
+            w-full py-4 rounded-2xl font-bold text-lg text-space-950
+            bg-gradient-to-r from-alien-green to-alien-cyan
+            active:scale-95 transition-transform shadow-lg shadow-alien-green/30
+          "
         >
           🚀 LAUNCH GAME
         </button>
         <button
           onClick={() => goTo('wallet')}
-          style={{
-            width: '100%', padding: '14px 0', borderRadius: 16,
-            fontFamily: 'var(--font-exo2)', fontWeight: 600, fontSize: 14,
-            background: 'rgba(139,92,246,0.08)',
-            color: '#8b5cf6',
-            border: '1.5px solid rgba(139,92,246,0.3)',
-            cursor: 'pointer', transition: 'transform 0.1s',
-          }}
-          // @ts-ignore
-          onTouchStart={e => (e.currentTarget.style.transform = 'scale(0.96)')}
-          // @ts-ignore
-          onTouchEnd={e => (e.currentTarget.style.transform = 'scale(1)')}
+          className="
+            w-full py-3.5 rounded-2xl font-bold text-alien-purple
+            bg-space-800 border border-alien-purple/40
+            active:scale-95 transition-transform
+          "
         >
-          ⚡ Game Wallet
+          ⚡ GAME WALLET
         </button>
         <button
           onClick={() => goTo('leaderboard')}
-          style={{
-            width: '100%',
-            padding: '14px 0',
-            borderRadius: 16,
-            fontFamily: 'var(--font-orbitron)',
-            fontWeight: 700,
-            fontSize: 14,
-            letterSpacing: '0.08em',
-            background: 'rgba(245,158,11,0.08)',
-            color: '#f59e0b',
-            border: '1.5px solid rgba(245,158,11,0.35)',
-            cursor: 'pointer',
-            transition: 'transform 0.1s',
-          }}
-          // @ts-ignore
-          onTouchStart={e => (e.currentTarget.style.transform = 'scale(0.96)')}
-          // @ts-ignore
-          onTouchEnd={e => (e.currentTarget.style.transform = 'scale(1)')}
+          className="
+            w-full py-3.5 rounded-2xl font-bold text-alien-gold
+            bg-space-800 border border-alien-gold/40
+            active:scale-95 transition-transform
+          "
         >
           🏆 GALACTIC LEADERBOARD
         </button>
         <button
           onClick={() => goTo('tutorial')}
-          style={{
-            width: '100%',
-            padding: '12px 0',
-            borderRadius: 16,
-            fontFamily: 'var(--font-exo2, sans-serif)',
-            fontWeight: 600,
-            fontSize: 14,
-            background: 'rgba(15,32,64,0.8)',
-            color: 'rgba(255,255,255,0.5)',
-            border: '1.5px solid rgba(255,255,255,0.1)',
-            cursor: 'pointer',
-            transition: 'transform 0.1s',
-          }}
-          // @ts-ignore
-          onTouchStart={e => (e.currentTarget.style.transform = 'scale(0.96)')}
-          // @ts-ignore
-          onTouchEnd={e => (e.currentTarget.style.transform = 'scale(1)')}
+          className="
+            w-full py-3.5 rounded-2xl font-semibold text-slate-300
+            bg-space-800 border border-slate-700
+            active:scale-95 transition-transform
+          "
         >
-          📡 How To Play
+          📡 HOW TO PLAY
         </button>
       </div>
-      <p style={{ color: 'rgba(255,255,255,0.15)', fontSize: 11, letterSpacing: '0.15em', fontFamily: 'var(--font-orbitron)' }}>
-        ALIEN NETWORK · VERIFIED HUMANS ONLY
+
+      {/* Footer */}
+      <p className="text-slate-700 text-xs text-center">
+        Alien Network · Verified Humans Only
       </p>
     </div>
   );
