@@ -5,35 +5,38 @@ import { useAlienBridge } from '@/hooks/use-alien-bridge';
 import { useGameStore } from '@/store/gameStore';
 
 export function AlienMiniAppProvider({ children }: { children: React.ReactNode }) {
-  const { user, ready, isAlienApp, error } = useAlienBridge();
+  const { user, ready, isAlienApp, error, pay, haptic } = useAlienBridge();
   const setBridgeState = useGameStore((state) => state.setBridgeState);
 
+  // Sync everything to Zustand
   useEffect(() => {
     setBridgeState({
       alienUser: user,
-      bridgeReady: ready,
       isAlienApp,
+      bridgeReady: ready,
       bridgeError: error,
     });
   }, [user, ready, isAlienApp, error, setBridgeState]);
 
+  // Expose the real pay function to the store
+  useEffect(() => {
+    if (ready && pay) {
+      useGameStore.setState({ pay });
+    }
+  }, [ready, pay]);
+
   if (!ready) {
     return (
-      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#050d18] text-white">
-        <div className="mb-8 text-6xl animate-pulse">🛸</div>
-        <h2 className="font-orbitron text-xl font-bold tracking-[0.2em] text-cyan-400">
-          CONGRUENCE
-        </h2>
-        <div className="mt-4 flex items-center gap-2">
-          <div className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-500" style={{ animationDelay: '0ms' }} />
-          <div className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-500" style={{ animationDelay: '200ms' }} />
-          <div className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-500" style={{ animationDelay: '400ms' }} />
-        </div>
-        <p className="mt-6 font-exo2 text-xs uppercase tracking-widest text-slate-500">
-          Syncing with Alien Bridge...
-        </p>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#050d18] text-white">
+        <div className="text-6xl mb-4">🛸</div>
+        <h1 className="text-2xl font-bold tracking-widest mb-2">CONGRUENCE</h1>
+        <p className="text-sm text-gray-400">Syncing with Alien Bridge...</p>
       </div>
     );
+  }
+
+  if (error) {
+    console.error('[AlienMiniAppProvider]', error);
   }
 
   return <>{children}</>;
