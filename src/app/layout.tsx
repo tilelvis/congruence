@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from 'next';
 import { Orbitron, Exo_2 } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
-import { BridgeGuard } from '@/components/BridgeGuard';
 import { AlienMiniAppProvider } from '@/components/providers/AlienMiniAppProvider';
 
 const orbitron = Orbitron({
@@ -38,13 +37,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="h-full overflow-hidden">
-      <body className={`${orbitron.variable} ${exo2.variable} font-sans h-full overflow-hidden bg-space-950 text-white`}>
+    <html lang="en">
+      <body className={`${orbitron.variable} ${exo2.variable} antialiased`}>
         <Providers>
           <AlienMiniAppProvider>
-            <BridgeGuard>
-              {children}
-            </BridgeGuard>
+            {children}
           </AlienMiniAppProvider>
         </Providers>
       </body>
