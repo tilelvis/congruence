@@ -8,7 +8,7 @@ export function AlienMiniAppProvider({ children }: { children: React.ReactNode }
   const { user, ready, isAlienApp, error, pay } = useAlienBridge();
   const setBridgeState = useGameStore((state) => state.setBridgeState);
 
-  // Sync bridge state (user, ready status, error) into Zustand
+  // Sync bridge state into Zustand
   useEffect(() => {
     setBridgeState({
       alienUser: user,
@@ -18,21 +18,31 @@ export function AlienMiniAppProvider({ children }: { children: React.ReactNode }
     });
   }, [user, ready, isAlienApp, error, setBridgeState]);
 
-  // Expose the real bridge pay() function to the store once ready
-  // This overwrites the dummy pay() in gameStore
+  // Expose the real bridge pay() to the store once ready
+  // We wrap it to handle the recipient difference safely
   useEffect(() => {
     if (ready && typeof pay === 'function') {
-      useGameStore.setState({ pay });
-      console.log('[AlienMiniAppProvider] Real pay function injected into store');
+      const wrappedPay = async (params: {
+        invoice: string;
+        recipient?: string;
+        amount: string;
+        token?: string;
+        network?: string;
+        memo?: string;
+      }) => {
+        // Ensure recipient is always a string for the bridge
+        const bridgeParams = {
+          ...params,
+          recipient: params.recipient ?? '', // fallback to empty string if undefined
+        };
+
+        return pay(bridgeParams);
+      };
+
+      useGameStore.setState({ pay: wrappedPay });
+      console.log('[AlienMiniAppProvider] Real pay function (wrapped) injected into store');
     }
   }, [ready, pay]);
-
-  // Optional: Add haptic feedback example on key events (uncomment if bridge.haptics exists)
-  // useEffect(() => {
-  //   if (ready && isAlienApp) {
-  //     // Example: bridge.haptics?.light() on game actions
-  //   }
-  // }, [ready, isAlienApp]);
 
   if (!ready) {
     return (
@@ -46,7 +56,6 @@ export function AlienMiniAppProvider({ children }: { children: React.ReactNode }
 
   if (error && isAlienApp) {
     console.error('[AlienMiniAppProvider] Bridge error:', error);
-    // You can show a fallback UI here if needed
   }
 
   return <>{children}</>;
