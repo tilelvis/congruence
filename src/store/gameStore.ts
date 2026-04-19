@@ -56,7 +56,6 @@ interface GameState {
   >>) => void;
 
   // Real payment function from Alien bridge
-  // recipient is required to match the bridge hook exactly
   pay: (params: {
     invoice: string;
     recipient: string;
@@ -81,7 +80,7 @@ export const useGameStore = create<GameState>()(
       isTimerRunning: false,
 
       freeHintsRemaining: 3,
-      alienTokenBalance: 100, // Starting balance
+      alienTokenBalance: 100,
       level: 1,
       gameNumber: 1,
 
@@ -255,16 +254,12 @@ export const useGameStore = create<GameState>()(
         alienTokenBalance: state.alienTokenBalance + amount
       })),
 
-      // Bridge state updater
       setBridgeState: (bridgeState) => set((state) => ({ ...state, ...bridgeState })),
 
-      // Dummy payment — will be overwritten by the real bridge pay() from AlienMiniAppProvider
+      // Dummy pay — will be overwritten by AlienMiniAppProvider
       pay: async (params) => {
         console.warn('[GameStore] pay() called before Alien bridge is ready');
-        return {
-          status: 'failed' as const,
-          invoice: params.invoice,
-        };
+        return { status: 'failed' as const, invoice: params.invoice };
       },
     }),
     {
