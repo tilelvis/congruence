@@ -55,10 +55,11 @@ interface GameState {
     'alienUser' | 'isAlienApp' | 'bridgeReady' | 'bridgeError'
   >>) => void;
 
-  // Real payment function from Alien bridge (overwritten by provider when ready)
+  // Real payment function from Alien bridge
+  // recipient is required to match the bridge hook exactly
   pay: (params: {
     invoice: string;
-    recipient?: string;
+    recipient: string;
     amount: string;
     token?: string;
     network?: string;
@@ -125,7 +126,6 @@ export const useGameStore = create<GameState>()(
         newGrid[row][col].playerValue = num;
         newGrid[row][col].notes.clear();
 
-        // Immediate feedback error checking
         let newErrors = errors;
         const rowVals = newGrid[row].map(c => c.playerValue || c.value);
         const colVals = newGrid.map(r => r[col].playerValue || r[col].value);
@@ -166,7 +166,6 @@ export const useGameStore = create<GameState>()(
         if (freeHintsRemaining > 0) {
           newFreeHints--;
         } else if (alienId) {
-          // Gated by server-side token deduction
           try {
             const res = await fetch('/api/game/use-hint', {
               method: 'POST',
@@ -259,7 +258,7 @@ export const useGameStore = create<GameState>()(
       // Bridge state updater
       setBridgeState: (bridgeState) => set((state) => ({ ...state, ...bridgeState })),
 
-      // Payment action — will be replaced by the real bridge pay() from AlienMiniAppProvider
+      // Dummy payment — will be overwritten by the real bridge pay() from AlienMiniAppProvider
       pay: async (params) => {
         console.warn('[GameStore] pay() called before Alien bridge is ready');
         return {
