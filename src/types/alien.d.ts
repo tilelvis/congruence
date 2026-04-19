@@ -4,7 +4,7 @@ declare module '@alien-id/miniapp-sdk' {
     alienId: string;
     username?: string;
     avatarUrl?: string;
-    walletAddress: string;    // Solana public key
+    walletAddress: string;    // Alien wallet address
     isVerifiedHuman: boolean;
   }
 
@@ -16,7 +16,7 @@ declare module '@alien-id/miniapp-sdk' {
 
   export interface PaymentRequest {
     amount: number;           // Token amount (human-readable, e.g. 5)
-    tokenMint: string;        // SPL token mint address
+    tokenMint: string;        // Token identifier (e.g. ALN)
     recipient: string;        // Treasury wallet
     memo?: string;            // e.g. "Congruence trial purchase"
     onSuccess: (txSignature: string) => void;

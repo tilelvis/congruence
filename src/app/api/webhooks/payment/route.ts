@@ -119,7 +119,7 @@ export async function POST(request: Request) {
       type: 'deposit',
       amount: depositAmount,
       balance: updatedWallet[0]?.balance ?? depositAmount,
-      memo: pack ? `Deposited ${pack.label} (${pack.trials} trials)` : `Deposited ${depositAmount} ALIEN`,
+      memo: pack ? `Deposited ${pack.label} (${pack.trials} trials)` : `Deposited ${depositAmount} ALN`,
       invoice: payload.invoice,
       txHash: payload.txHash,
     });

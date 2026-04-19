@@ -54,10 +54,12 @@ export function NumberPad() {
         </button>
         <button
           onClick={() => {
-            useHint(user?.alienId || 'dummy-user-id');
-            buzz('medium');
+            if (user?.alienId) {
+              useHint(user.alienId);
+              buzz('medium');
+            }
           }}
-          disabled={!isHintAffordable}
+          disabled={!isHintAffordable || !user}
           className={cn(
             "h-11 rounded-xl text-sm font-bold border active:scale-90 transition-all",
             isHintAffordable

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { GameShell } from '@/components/GameShell';
 import { SplashScreen } from '@/components/SplashScreen';
@@ -10,15 +10,34 @@ import { VictoryScreen } from '@/components/VictoryScreen';
 import { Leaderboard } from '@/components/Leaderboard';
 import { Tutorial } from '@/components/Tutorial';
 import { WalletPage } from '@/components/WalletPage';
+import { useAlien } from '@alien-id/miniapps-react';
 
 export default function Home() {
   const { screen, tick, goTo, startGame } = useGameStore();
+  const { authToken } = useAlien();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     timerRef.current = setInterval(() => tick(), 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current!); };
   }, [tick]);
+
+  const linkAlienId = useCallback(async () => {
+    if (!authToken) return;
+    try {
+      await fetch('/api/me', {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+    } catch (err) {
+      console.error('Failed to link Alien ID:', err);
+    }
+  }, [authToken]);
+
+  useEffect(() => {
+    if (authToken) {
+      linkAlienId();
+    }
+  }, [authToken, linkAlienId]);
 
   // Handle incoming deeplink parameters
   useEffect(() => {

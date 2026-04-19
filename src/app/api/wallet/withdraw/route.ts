@@ -6,7 +6,7 @@ import { db } from '@/lib/db';
 import { gameWallets, walletLedger, withdrawals } from '@/lib/db/schema';
 import { eq, sql } from 'drizzle-orm';
 
-const MIN_WITHDRAWAL = 5; // Minimum 5 ALIEN to withdraw
+const MIN_WITHDRAWAL = 5; // Minimum 5 ALN to withdraw
 
 export async function POST(request: NextRequest) {
   const auth = await verifyRequest(request);
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
 
   if (!amount || amount < MIN_WITHDRAWAL) {
     return NextResponse.json(
-      { error: `Minimum withdrawal is ${MIN_WITHDRAWAL} ALIEN` },
+      { error: `Minimum withdrawal is ${MIN_WITHDRAWAL} ALN` },
       { status: 400 }
     );
   }
@@ -58,12 +58,12 @@ export async function POST(request: NextRequest) {
     type: 'withdrawal',
     amount: -amount,
     balance: updated[0].balance,
-    memo: `Withdrawal: ${amount} ALIEN to Alien wallet`,
+    memo: `Withdrawal: ${amount} ALN to Alien wallet`,
   });
 
   return NextResponse.json({
     success: true,
     balance: updated[0].balance,
-    message: `Withdrawal of ${amount} ALIEN queued. Processing within 24 hours.`,
+    message: `Withdrawal of ${amount} ALN queued. Processing within 24 hours.`,
   });
 }

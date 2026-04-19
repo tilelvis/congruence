@@ -32,21 +32,21 @@ npm run dev
 For detailed setup instructions, please refer to the following guides:
 
 - [Vercel Deployment Guide](docs/VERCEL_SETUP.md)
-- [Alien Developer Dashboard Setup](docs/ALIEN_DASHBOARD_SETUP.md)
+- [Alien Developer Dashboard Setup](docs/ALN_DASHBOARD_SETUP.md)
 - [Environment Variables Reference](docs/ENVIRONMENT_VARIABLES.md)
 
 ## 🛠 Tech Stack
 - **Framework**: Next.js 15 (App Router)
 - **Styling**: Tailwind CSS
 - **State Management**: Zustand
-- **Blockchain**: Solana (@solana/web3.js)
+
 - **Database**: Neon (Postgres) with Drizzle ORM
 - **Platform**: Alien SDK
 
 ## 👽 Platform Integration
 Congruence leverages the Alien SDK for:
 - **Identity**: Securely identifying verified humans.
-- **Payments**: Accepting Aliencoin (SPL tokens) for extra game trials.
+- **Payments**: Accepting ALN (SPL tokens) for extra game trials.
 - **Haptics**: Providing tactile feedback on mobile devices.
 - **Deep Links**: Allowing users to share scores and jump directly into missions.
 
