@@ -2,25 +2,16 @@
 
 import { useEffect, useState, useCallback } from 'react';
 
-export interface AlienUser {
+interface AlienUser {
   alienId:   string;
   token:     string;
   callSign?: string;
 }
 
-export interface PaymentResult {
+interface PaymentResult {
   status:  'paid' | 'failed' | 'cancelled';
   txHash?: string;
   invoice: string;
-}
-
-export interface PayParams {
-  invoice:   string;
-  recipient: string;
-  amount:    string;
-  token?:    string;
-  network?:  string;
-  memo?:     string;
 }
 
 export function useAlienBridge() {
@@ -32,213 +23,134 @@ export function useAlienBridge() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Prevent multiple initializations
-    if (ready) return;
-
-    // The bridge may not be injected instantly —
-    // poll for up to 3 seconds before giving up
     let attempts = 0;
-    const maxAttempts = 30; // 30 × 100ms = 3 seconds
+    const maxAttempts = 50; // 5 seconds total
 
     const tryConnect = () => {
       attempts++;
 
-      const bridge = (window as any).alien;
+      // Try multiple possible bridge objects used by Alien mini-apps
+      const possibleBridges = [
+        (window as any).alien,
+        (window as any).__miniAppsBridge__,
+        (window as any).alienBridge,
+        (window as any).bridge,
+      ];
+
+      const bridge = possibleBridges.find(b => !!b);
 
       if (!bridge) {
         if (attempts >= maxAttempts) {
-          // Genuinely not inside Alien App
-          console.warn('[AlienBridge] window.alien not found after 3s — not in Alien App');
+          console.warn('[AlienBridge] No bridge found after 5s — not in Alien App');
           setReady(true);
           setIsAlienApp(false);
         } else {
-          // Try again in 100ms
           setTimeout(tryConnect, 100);
         }
         return;
       }
 
-      // Bridge found
       setIsAlienApp(true);
-      console.log('[AlienBridge] window.alien found, calling app.ready()');
+      console.log('[AlienBridge] Bridge found:', Object.keys(bridge).slice(0, 10));
 
-      // Listen for identity response
+      // Listen for ready/identity messages (try multiple event types)
       const handleMessage = (event: MessageEvent) => {
         try {
-          const data = typeof event.data === 'string'
-            ? JSON.parse(event.data)
-            : event.data;
+          const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+          console.log('[AlienBridge] Message received:', data?.type || 'no type', data);
 
-          if (data?.type === 'app:ready' || data?.type === 'alien:ready') {
-            console.log('[AlienBridge] message received:', data?.type, data);
+          if (data?.type?.includes('ready') || data?.type === 'identity' || data?.type === 'app:ready') {
             const payload = data.payload ?? data.data ?? data;
 
-            const alienId = payload.alienId
-              ?? payload.alien_id
-              ?? payload.userId
-              ?? payload.sub;
+            const alienId = payload.alienId ?? payload.alien_id ?? payload.userId ?? payload.sub ?? payload.id;
+            const token = payload.token ?? payload.jwt ?? payload.accessToken ?? payload.sessionToken;
 
-            const token = payload.token
-              ?? payload.jwt
-              ?? payload.accessToken;
-
-            if (!alienId) {
-              console.error('[AlienBridge] app:ready fired but no alienId in payload', payload);
-              setError('Bridge connected but no alienId received');
+            if (alienId) {
+              console.log('[AlienBridge] ✅ Got real Alien ID:', alienId);
+              setUser({
+                alienId,
+                token: token ?? '',
+                callSign: payload.callSign ?? payload.username ?? payload.name,
+              });
               setReady(true);
+              window.removeEventListener('message', handleMessage);
               return;
             }
-
-            console.log('[AlienBridge] Got alienId:', alienId);
-
-            setUser({
-              alienId,
-              token:    token ?? '',
-              callSign: payload.callSign ?? payload.username ?? payload.name,
-            });
-            setReady(true);
-            window.removeEventListener('message', handleMessage);
           }
-        } catch {
-          // non-JSON messages are normal, ignore
+        } catch (e) {
+          // ignore non-JSON messages
         }
       };
 
       window.addEventListener('message', handleMessage);
 
-      // Signal ready — this triggers the identity response
+      // Try multiple ways to signal ready
       try {
-        if (bridge.app?.ready) {
-          bridge.app.ready();
-        } else if (typeof bridge.ready === 'function') {
-          bridge.ready();
-        } else if (typeof bridge.init === 'function') {
-          bridge.init();
-        } else {
-          console.warn('[AlienBridge] No standard ready() method found on bridge');
-        }
+        bridge.app?.ready?.() || bridge.ready?.() || bridge.init?.() || bridge.connect?.();
+        console.log('[AlienBridge] Called ready/init on bridge');
       } catch (e) {
-        console.error('[AlienBridge] app.ready() threw:', e);
+        console.warn('[AlienBridge] ready() call failed, trying alternatives');
       }
 
-      // Safety timeout — if no response in 5s, something is wrong
+      // Safety timeout
       setTimeout(() => {
-        // Use a functional update or just check the ref-like state if it was a ref,
-        // but here we just check if it's still not ready
-        setReady(currentReady => {
-          if (!currentReady && (window as any).alien) {
-            console.error('[AlienBridge] No identity response after 5s');
-            setError('Alien App did not respond with identity');
-            return true;
-          }
-          return currentReady;
-        });
-      }, 5000);
+        if (!user) {
+          setError('No identity received from Alien');
+          setReady(true);
+          window.removeEventListener('message', handleMessage);
+        }
+      }, 6000);
     };
 
     tryConnect();
-  }, [ready]);
-
-  const haptic = useCallback((style: 'light' | 'medium' | 'heavy' | 'success' | 'error' = 'medium') => {
-    const bridge = (window as any).alien;
-    try {
-      if (bridge?.haptics?.vibrate) {
-        bridge.haptics.vibrate(style);
-      } else if (bridge?.hapticFeedback) {
-        bridge.hapticFeedback(style);
-      }
-    } catch (e) {
-      console.warn('[AlienBridge] Haptic failed', e);
-    }
   }, []);
 
-  const pay = useCallback((params: PayParams): Promise<PaymentResult> => {
+  const pay = useCallback((params: {
+    invoice: string;
+    recipient: string;
+    amount: string;
+    token?: string;
+    network?: string;
+    memo?: string;
+  }): Promise<PaymentResult> => {
     return new Promise((resolve) => {
-      const bridge = (window as any).alien;
+      const bridge = (window as any).alien || (window as any).__miniAppsBridge__ || (window as any).alienBridge;
 
       if (!bridge) {
-        console.error('[AlienBridge] pay() called but window.alien not available');
         resolve({ status: 'failed', invoice: params.invoice });
         return;
       }
 
-      console.log('[AlienBridge] Initiating payment:', params);
-
-      // Listen for payment response
       const handlePayment = (event: MessageEvent) => {
         try {
-          const data = typeof event.data === 'string'
-            ? JSON.parse(event.data)
-            : event.data;
-
-          console.log('[AlienBridge] payment message:', data?.type, data);
-
-          // Handle multiple possible event type names
-          const isPaymentResponse = (
-            data?.type === 'payment:response' ||
-            data?.type === 'payment:result' ||
-            data?.type === 'alien:payment'
-          );
-
-          // Match by invoice OR just take first payment response
-          const matchesInvoice = !data?.payload?.invoice
-            || data?.payload?.invoice === params.invoice;
-
-          if (isPaymentResponse && matchesInvoice) {
+          const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+          if (data?.type?.includes('payment') || data?.type === 'result') {
             window.removeEventListener('message', handlePayment);
-
             const payload = data.payload ?? data;
-            const status  = payload.status ?? (payload.success ? 'paid' : 'failed');
-
-            console.log('[AlienBridge] Payment result:', status, payload.txHash);
-
-            if (status === 'paid') {
-              haptic('success');
-            } else if (status === 'failed') {
-              haptic('error');
-            }
-
             resolve({
-              status:  status as PaymentResult['status'],
-              txHash:  payload.txHash ?? payload.tx_hash ?? payload.transactionId,
+              status: (payload.status ?? (payload.success ? 'paid' : 'failed')) as any,
+              txHash: payload.txHash ?? payload.tx_hash,
               invoice: params.invoice,
             });
           }
-        } catch {
-          // ignore
-        }
+        } catch {}
       };
 
       window.addEventListener('message', handlePayment);
 
-      // Trigger the native payment sheet
       try {
-        const payMethod = bridge.payment?.pay ?? bridge.pay;
-        if (typeof payMethod === 'function') {
-          payMethod({
-            invoice:   params.invoice,
-            recipient: params.recipient,
-            amount:    params.amount,
-            token:     params.token  ?? 'ALN',
-            network:   params.network ?? 'alien',
-            memo:      params.memo,
-          });
-        } else {
-           throw new Error('No pay method found on bridge');
-        }
+        bridge.payment?.pay?.(params) || bridge.pay?.(params);
       } catch (e) {
-        console.error('[AlienBridge] payment.pay() threw:', e);
-        window.removeEventListener('message', handlePayment);
+        console.error('[AlienBridge] pay failed:', e);
         resolve({ status: 'failed', invoice: params.invoice });
       }
 
-      // Timeout if no response in 2 minutes (user abandoned)
       setTimeout(() => {
         window.removeEventListener('message', handlePayment);
         resolve({ status: 'cancelled', invoice: params.invoice });
-      }, 120_000);
+      }, 120000);
     });
-  }, [haptic]);
+  }, []);
 
-  return { user, ready, isAlienApp, error, pay, haptic };
-}
+  return { user, ready, isAlienApp, error, pay };
+              }
