@@ -152,5 +152,16 @@ export function useAlienBridge() {
     });
   }, []);
 
-  return { user, ready, isAlienApp, error, pay };
-              }
+  const haptic = useCallback((style: 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error' = 'medium') => {
+    const bridge = (window as any).alien || (window as any).__miniAppsBridge__ || (window as any).alienBridge || (window as any).bridge;
+    if (!bridge) return;
+    try {
+      bridge.haptic?.(style) || bridge.hapticFeedback?.(style) || bridge.vibrate?.(style);
+    } catch (e) {
+      console.warn('[AlienBridge] haptic failed:', e);
+    }
+  }, []);
+
+  return { user, ready, isAlienApp, error, pay, haptic };
+}
+
