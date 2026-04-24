@@ -1,7 +1,7 @@
 'use client';
 
 import { useGameStore } from '@/store/gameStore';
-import { useAlien } from '@/lib/alienClient';
+import { useAlien } from '@alien_org/react';
 
 export function SplashScreen() {
   const { goTo } = useGameStore();

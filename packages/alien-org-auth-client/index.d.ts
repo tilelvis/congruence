@@ -7,4 +7,4 @@ export interface AuthClient {
   verifyToken(token: string): Promise<{ sub: string; username: string }>;
 }
 
-export function createAuthClient(options: { audience: string }): AuthClient;
+export function createAuthClient(): AuthClient;

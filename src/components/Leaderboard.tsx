@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
-import { useAlien } from '@/lib/alienClient';
+import { useAlien } from '@alien_org/react';
 
 interface Entry {
   rank: number;

@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@alien_org/auth-client": "file:packages/alien-org-auth-client",
+    "@alien_org/react": "file:packages/alien-org-react",
     "@alien-id/miniapps-react": "file:packages/miniapps-react",
     "@neondatabase/serverless": "^1.1.0",
     "@solana/spl-token": "^0.4.14",
