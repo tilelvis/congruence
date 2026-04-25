@@ -15,50 +15,46 @@ function AlienProvider({ children }) {
   const [state, setState] = React.useState(DEFAULT);
 
   React.useEffect(() => {
-    if (typeof window === 'undefined') return;
+    // Helper to commit a ready state from any payload shape
+    function commitReady(alienId, token, callSign) {
+      if (!token || !alienId) return;
+      window.__ALIEN_AUTH_TOKEN__ = token;
+      setState({
+        user: { alienId, username: callSign ?? null },
+        isReady: true,
+        authToken: token,
+        isBridgeAvailable: true,
+      });
+    }
 
+    // Case 1: token was already injected before this effect ran
+    if (window.__ALIEN_AUTH_TOKEN__ && window.__ALIEN_USER__) {
+      commitReady(
+        window.__ALIEN_USER__.alienId,
+        window.__ALIEN_AUTH_TOKEN__,
+        window.__ALIEN_USER__.callSign,
+      );
+      return;
+    }
+
+    // Case 2: listen for the app:ready postMessage
     const handleMessage = (event) => {
       try {
-        const raw = event.data;
-        const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
-
-        // Handle both message shapes the Alien app may send
-        if (data.type === 'app:ready' && data.payload) {
-          const { alienId, token, callSign } = data.payload;
-          setState({
-            user: { alienId, username: callSign ?? null },
-            isReady: true,
-            authToken: token,
-            isBridgeAvailable: true,
-          });
-          if (typeof window !== 'undefined') {
-            window.__ALIEN_AUTH_TOKEN__ = token;
-          }
+        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        // Shape A: { type: 'app:ready', payload: { alienId, token, callSign } }
+        if (data.type === 'app:ready' && data.payload?.token) {
+          commitReady(data.payload.alienId, data.payload.token, data.payload.callSign);
         }
-
-        // Also handle the format: { alienId, token, callSign } at top level
+        // Shape B: { alienId, token, callSign } at top level
         if (!data.type && data.token && data.alienId) {
-          setState({
-            user: { alienId: data.alienId, username: data.callSign ?? null },
-            isReady: true,
-            authToken: data.token,
-            isBridgeAvailable: true,
-          });
-          window.__ALIEN_AUTH_TOKEN__ = data.token;
+          commitReady(data.alienId, data.token, data.callSign);
         }
       } catch (_) {}
     };
 
     window.addEventListener('message', handleMessage);
 
-    // Mark bridge as available immediately — we are inside the Alien WebView
-    // isBridgeAvailable=true as soon as the page loads inside Alien app,
-    // authToken arrives async via the app:ready message.
-    if (window.alien) {
-      setState(prev => ({ ...prev, isBridgeAvailable: true }));
-    }
-
-    // Call ready() to trigger the app:ready response from the host
+    // Call ready() to prompt the host to send app:ready
     const callReady = () => {
       if (window.alien?.app?.ready) {
         window.alien.app.ready();
@@ -71,10 +67,23 @@ function AlienProvider({ children }) {
       const interval = setInterval(() => {
         if (callReady()) clearInterval(interval);
       }, 100);
-      setTimeout(() => clearInterval(interval), 8000);
+      setTimeout(() => clearInterval(interval), 5000);
     }
 
-    return () => window.removeEventListener('message', handleMessage);
+    // Case 3: fallback timeout — if no response after 5s, mark isReady=true
+    // so the UI stops spinning. isBridgeAvailable stays false → shows
+    // "open in Alien app" screen instead of infinite spinner.
+    const timeout = setTimeout(() => {
+      setState(prev => {
+        if (!prev.isReady) return { ...prev, isReady: true };
+        return prev;
+      });
+    }, 5000);
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      clearTimeout(timeout);
+    };
   }, []);
 
   return React.createElement(AlienContext.Provider, { value: state }, children);
