@@ -1,29 +1,100 @@
-const { jwtVerify, createRemoteJWKSet } = require('jose');
+const React = require('react');
 
-const JWKS_URL = 'https://auth.alien.org/.well-known/jwks.json';
-const JWKS = createRemoteJWKSet(new URL(JWKS_URL));
+const AlienContext = React.createContext({
+  user: null,
+  isReady: false,
+  authToken: null,
+  isBridgeAvailable: false,
+});
 
-class JOSEError extends Error {}
-class JWTExpired extends JOSEError {}
+function AlienProvider({ children }) {
+  const [state, setState] = React.useState({
+    user: null,
+    isReady: false,
+    authToken: null,
+    isBridgeAvailable: false,
+  });
 
-const JwtErrors = { JOSEError, JWTExpired };
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
 
-function createAuthClient() {
-  return {
-    async verifyToken(token) {
+    const handleMessage = (event) => {
       try {
-        const { payload } = await jwtVerify(token, JWKS, {
-          issuer: 'https://auth.alien.org',
-        });
-        if (!payload.sub) throw new JOSEError('Missing sub claim');
-        return { sub: payload.sub };
-      } catch (err) {
-        if (err.code === 'ERR_JWT_EXPIRED') throw new JWTExpired(err.message);
-        if (err instanceof JOSEError) throw err;
-        throw new JOSEError(err.message);
-      }
-    },
-  };
+        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        if (data.type === 'app:ready' && data.payload) {
+          const { alienId, token, callSign } = data.payload;
+          setState({
+            user: { alienId, username: callSign ?? null },
+            isReady: true,
+            authToken: token,
+            isBridgeAvailable: true,
+          });
+        }
+      } catch (_) {}
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    // Signal to the Alien host app that this miniapp is ready
+    if (window.alien?.app?.ready) {
+      window.alien.app.ready();
+    } else {
+      // Alien host injects window.alien after load — retry briefly
+      const interval = setInterval(() => {
+        if (window.alien?.app?.ready) {
+          window.alien.app.ready();
+          clearInterval(interval);
+        }
+      }, 100);
+      setTimeout(() => clearInterval(interval), 5000);
+    }
+
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  return React.createElement(AlienContext.Provider, { value: state }, children);
 }
 
-module.exports = { createAuthClient, JwtErrors };
+function useAlien() {
+  return React.useContext(AlienContext);
+}
+
+function usePayment(options = {}) {
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  const pay = React.useCallback(async (params) => {
+    if (typeof window === 'undefined' || !window.alien?.payment?.pay) {
+      options.onFailed?.('BRIDGE_UNAVAILABLE');
+      return { status: 'failed' };
+    }
+
+    setIsLoading(true);
+    return new Promise((resolve) => {
+      const handleMessage = (event) => {
+        try {
+          const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+          if (data.type === 'payment:response' && data.payload?.invoice === params.invoice) {
+            window.removeEventListener('message', handleMessage);
+            setIsLoading(false);
+            if (data.payload.status === 'paid') {
+              options.onPaid?.(data.payload.txHash);
+              resolve({ status: 'paid', txHash: data.payload.txHash });
+            } else if (data.payload.status === 'cancelled') {
+              options.onCancelled?.();
+              resolve({ status: 'cancelled' });
+            } else {
+              options.onFailed?.(data.payload.errorCode ?? 'FAILED');
+              resolve({ status: 'failed' });
+            }
+          }
+        } catch (_) {}
+      };
+      window.addEventListener('message', handleMessage);
+      window.alien.payment.pay(params);
+    });
+  }, []);
+
+  return { pay, isLoading };
+}
+
+module.exports = { AlienProvider, useAlien, usePayment };
