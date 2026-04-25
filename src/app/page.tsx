@@ -10,7 +10,7 @@ import { VictoryScreen } from '@/components/VictoryScreen';
 import { Leaderboard } from '@/components/Leaderboard';
 import { Tutorial } from '@/components/Tutorial';
 import { WalletPage } from '@/components/WalletPage';
-import { useAlien } from '@/lib/alienClient';
+import { useAlien } from '@alien_org/react';
 
 export default function Home() {
   const { screen, tick, goTo, startGame } = useGameStore();

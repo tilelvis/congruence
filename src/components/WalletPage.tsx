@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useAlienBridge } from '@/hooks/use-alien-bridge';
+import { useAlien, usePayment } from '@alien_org/react';
 import { DEPOSIT_PACKS, type DepositPack } from '@/lib/constants/depositPacks';
 
 interface WalletData {
@@ -24,8 +24,12 @@ interface Props {
 }
 
 export function WalletPage({ onBack }: Props) {
-  const { user, isAlienApp, pay, haptic } = useAlienBridge();
-  const authToken = user?.token;
+  const { user, authToken, isBridgeAvailable } = useAlien();
+  const isAlienApp = isBridgeAvailable;
+  const { pay } = usePayment({
+    onCancelled: () => setStatusMsg({ text: 'Payment cancelled.', isError: false }),
+    onFailed: () => setStatusMsg({ text: 'Payment failed. Please try again.', isError: true }),
+  });
 
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
@@ -100,7 +104,7 @@ export function WalletPage({ onBack }: Props) {
 
       // Step 2: Open the Alien native payment approval UI.
       const result = await pay({
-        recipient: pack.recipientAddress,
+        recipient: process.env.NEXT_PUBLIC_ALIEN_RECIPIENT_ADDRESS!,
         amount: pack.amount,
         token: pack.token,
         network: pack.network,
@@ -117,10 +121,6 @@ export function WalletPage({ onBack }: Props) {
           fetchWallet();
           if (attempts >= 5) clearInterval(poll);
         }, 2000);
-      } else if (result.status === 'cancelled') {
-        setStatusMsg({ text: 'Payment cancelled.', isError: false });
-      } else {
-        setStatusMsg({ text: 'Payment failed. Please try again.', isError: true });
       }
     } catch (err) {
       console.error('Deposit error:', err);

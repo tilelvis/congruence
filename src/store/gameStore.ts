@@ -3,7 +3,7 @@ import { generatePuzzle, type Puzzle } from '@/lib/puzzleGenerator';
 import { isSolved, getHint } from '@/lib/puzzleSolver';
 import { calculateScore } from '@/lib/scoreVerification';
 import { persist } from 'zustand/middleware';
-import { type AlienUser, type PaymentResult } from '@/hooks/use-alien-bridge';
+import { type AlienUser } from '@alien_org/react';
 
 export type Screen = 'splash' | 'difficulty' | 'game' | 'victory' | 'leaderboard' | 'tutorial' | 'wallet';
 
@@ -63,7 +63,7 @@ interface GameState {
     token?: string;
     network?: string;
     memo?: string;
-  }) => Promise<PaymentResult>;
+  }) => Promise<{ status: string; txHash?: string; invoice?: string }>;
 }
 
 export const useGameStore = create<GameState>()(
@@ -259,7 +259,7 @@ export const useGameStore = create<GameState>()(
       // Dummy pay — will be overwritten by AlienMiniAppProvider
       pay: async (params) => {
         console.warn('[GameStore] pay() called before Alien bridge is ready');
-        return { status: 'failed' as const, invoice: params.invoice };
+        return { status: 'failed', invoice: params.invoice };
       },
     }),
     {
