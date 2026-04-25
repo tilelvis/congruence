@@ -15,10 +15,14 @@ function AlienProvider({ children }) {
   const [state, setState] = React.useState(DEFAULT);
 
   React.useEffect(() => {
-    // This only runs in the browser — useEffect never runs on the server.
+    if (typeof window === 'undefined') return;
+
     const handleMessage = (event) => {
       try {
-        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        const raw = event.data;
+        const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
+
+        // Handle both message shapes the Alien app may send
         if (data.type === 'app:ready' && data.payload) {
           const { alienId, token, callSign } = data.payload;
           setState({
@@ -27,14 +31,34 @@ function AlienProvider({ children }) {
             authToken: token,
             isBridgeAvailable: true,
           });
+          if (typeof window !== 'undefined') {
+            window.__ALIEN_AUTH_TOKEN__ = token;
+          }
+        }
+
+        // Also handle the format: { alienId, token, callSign } at top level
+        if (!data.type && data.token && data.alienId) {
+          setState({
+            user: { alienId: data.alienId, username: data.callSign ?? null },
+            isReady: true,
+            authToken: data.token,
+            isBridgeAvailable: true,
+          });
+          window.__ALIEN_AUTH_TOKEN__ = data.token;
         }
       } catch (_) {}
     };
 
     window.addEventListener('message', handleMessage);
 
-    // Call ready() immediately if bridge is already injected,
-    // otherwise poll briefly for it (Alien app injects it after load).
+    // Mark bridge as available immediately — we are inside the Alien WebView
+    // isBridgeAvailable=true as soon as the page loads inside Alien app,
+    // authToken arrives async via the app:ready message.
+    if (window.alien) {
+      setState(prev => ({ ...prev, isBridgeAvailable: true }));
+    }
+
+    // Call ready() to trigger the app:ready response from the host
     const callReady = () => {
       if (window.alien?.app?.ready) {
         window.alien.app.ready();
