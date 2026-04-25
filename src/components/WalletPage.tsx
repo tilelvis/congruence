@@ -24,8 +24,10 @@ interface Props {
 }
 
 export function WalletPage({ onBack }: Props) {
-  const { user, authToken, isBridgeAvailable } = useAlien();
-  const isAlienApp = isBridgeAvailable;
+  const { user, authToken, isBridgeAvailable, isReady } = useAlien();
+  // While bridge is still initialising (!isReady), treat as alien app so we
+  // never flash the rejection screen to a real Alien app user.
+  const isAlienApp = isBridgeAvailable || !isReady;
   const { pay } = usePayment({
     onCancelled: () => setStatusMsg({ text: 'Payment cancelled.', isError: false }),
     onFailed: () => setStatusMsg({ text: 'Payment failed. Please try again.', isError: true }),
@@ -211,6 +213,22 @@ export function WalletPage({ onBack }: Props) {
     }),
   };
 
+  // Bridge still initialising — show spinner instead of rejection screen
+  if (!isReady) {
+    return (
+      <div style={{ ...S.page, alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{
+          width: 32, height: 32,
+          border: '2px solid #00ff88',
+          borderTopColor: 'transparent',
+          borderRadius: '50%',
+          animation: 'spin 0.8s linear infinite',
+        }} />
+      </div>
+    );
+  }
+
+  // Bridge ready but not inside Alien app
   if (!isAlienApp) {
     return (
       <div style={{ ...S.page, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 }}>
